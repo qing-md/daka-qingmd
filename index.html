@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="每日训练打卡">
+<meta name="theme-color" content="#F6F4F0">
+<title>每日训练打卡</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+  --bg:#F6F4F0; --card:#FFFFFF; --line:#E7E1D8;
+  --ink:#23201C; --ink2:#6E665C; --ink3:#9B9388;
+  --brand:#C0522F; --brand-soft:#FBEDE7;
+  --ok:#3D7A54; --ok-soft:#EDF5EF;
+  --warn:#B8860B; --warn-soft:#FBF3E0;
+  --cool:#3D6B8C;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:17px;line-height:1.6;-webkit-text-size-adjust:100%;}
+body{padding:0 0 40px;}
+.wrap{max-width:520px;margin:0 auto;padding:0 14px;}
+
+/* 顶栏 */
+header{background:var(--brand);color:#fff;padding:18px 14px 20px;padding-top:calc(18px + env(safe-area-inset-top));}
+header .wrap{padding:0 4px;}
+.hd-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.hd-date{font-size:22px;font-weight:700;letter-spacing:.5px;}
+.hd-sub{font-size:13px;opacity:.88;margin-top:2px;}
+.icon-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.18);
+  border:0;color:#fff;font-size:19px;line-height:1;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.icon-btn:disabled{opacity:.3;}
+
+/* 进度 */
+.progress-card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  margin-top:-14px;padding:16px 16px 14px;box-shadow:0 4px 16px rgba(60,45,35,.06);}
+.pro-top{display:flex;align-items:center;gap:14px;}
+.ring{width:74px;height:74px;flex:0 0 auto;position:relative;}
+.ring svg{transform:rotate(-90deg);}
+.ring .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:19px;font-weight:700;color:var(--brand);}
+.pro-txt{flex:1;min-width:0;}
+.pro-txt .big{font-size:20px;font-weight:700;line-height:1.35;}
+.pro-txt .small{font-size:13.5px;color:var(--ink2);margin-top:3px;}
+.tier-chip{display:inline-block;font-size:12.5px;padding:3px 9px;border-radius:99px;
+  background:var(--brand-soft);color:var(--brand);font-weight:600;vertical-align:middle;}
+.tier-chip.light{background:var(--warn-soft);color:var(--warn);}
+.tier-chip.plus{background:var(--ok-soft);color:var(--ok);}
+
+/* 建议卡 */
+.advice{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:13px 15px;margin-top:12px;}
+.advice .t{font-size:13px;color:var(--ink3);letter-spacing:.5px;}
+.advice .c{font-size:15.5px;margin-top:5px;}
+.advice .r{font-size:13.5px;color:var(--ink2);margin-top:5px;}
+.advice.warnbox{background:var(--warn-soft);border-color:#F0DFB4;}
+
+/* 分组标题 */
+.slot-h{display:flex;align-items:center;gap:8px;margin:20px 2px 9px;}
+.slot-h .tag{font-size:12.5px;font-weight:700;color:#fff;background:var(--ink2);
+  padding:2px 9px;border-radius:6px;letter-spacing:.5px;}
+.slot-h .tag.am{background:var(--brand);}
+.slot-h .tag.pm{background:var(--cool);}
+.slot-h .tag.ao{background:var(--ok);}
+.slot-h .tag.rc{background:#8A7B6B;}
+.slot-h .nm{font-size:15.5px;font-weight:700;color:var(--ink);}
+.slot-h .cnt{margin-left:auto;font-size:13px;color:var(--ink3);}
+
+/* 任务项 */
+.item{display:flex;gap:12px;align-items:flex-start;background:var(--card);
+  border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:9px;
+  transition:background .15s,opacity .15s;}
+.item .box{width:32px;height:32px;flex:0 0 auto;border:2.2px solid #CFC6BA;border-radius:50%;
+  margin-top:1px;display:flex;align-items:center;justify-content:center;background:#fff;}
+.item .box svg{width:17px;height:17px;stroke:#fff;stroke-width:3;fill:none;opacity:0;}
+.item .body{flex:1;min-width:0;}
+.item .nm{font-size:17px;font-weight:600;line-height:1.4;}
+.item .dose{font-size:14.5px;color:var(--brand);font-weight:600;margin-top:2px;}
+.item .cue{font-size:13.5px;color:var(--ink2);margin-top:4px;line-height:1.5;}
+.item .eq{display:inline-block;font-size:11.5px;color:var(--ink3);border:1px solid var(--line);
+  border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:1px;}
+.item.done{background:var(--ok-soft);border-color:#CFE3D5;}
+.item.done .box{background:var(--ok);border-color:var(--ok);}
+.item.done .box svg{opacity:1;}
+.item.done .nm{color:var(--ink2);text-decoration:line-through;}
+.item.done .cue,.item.done .dose{opacity:.55;}
+.desc{font-size:12px;color:#6b6358;line-height:1.55;margin-top:4px;}
+.pho{margin-top:8px;}
+.pho img{width:100%;max-width:240px;border-radius:10px;display:block;background:#eee;}
+.pho.noimg .pho-tag{display:inline-block;}
+.pho-tag{display:none;font-size:11px;color:#a89e8f;border:1px dashed #d8cfbf;padding:6px 10px;border-radius:8px;}
+
+/* 健康信号 */
+.health{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  margin-top:12px;overflow:hidden;}
+.health .hh{display:flex;align-items:center;padding:13px 15px;font-size:15.5px;font-weight:600;}
+.health .hh .arw{margin-left:auto;font-size:13px;color:var(--ink3);transition:transform .2s;}
+.health.open .hh .arw{transform:rotate(90deg);}
+.health .hb{padding:0 15px 13px;display:none;}
+.health.open .hb{display:block;}
+.hrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px dashed var(--line);}
+.hrow label{flex:0 0 96px;font-size:14.5px;color:var(--ink2);}
+.hrow .opts{display:flex;gap:6px;flex-wrap:wrap;flex:1;}
+.opt{font-size:13.5px;padding:5px 11px;border-radius:8px;border:1px solid var(--line);
+  background:#fff;color:var(--ink2);}
+.opt.sel{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+input.mini{width:74px;font-size:15px;padding:6px 8px;border:1px solid var(--line);
+  border-radius:8px;background:#fff;color:var(--ink);}
+
+/* 历史 */
+.hist{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px;margin-top:12px;}
+.hist .t{font-size:13px;color:var(--ink3);margin-bottom:9px;}
+.hist .bars{display:flex;gap:6px;align-items:flex-end;height:64px;}
+.hist .b{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;}
+.hist .b .fill{width:100%;background:var(--brand);border-radius:4px 4px 2px 2px;min-height:3px;opacity:.85;}
+.hist .b .lb{font-size:11px;color:var(--ink3);}
+.hist .b.today .fill{background:var(--brand);}
+.hist .b.today .lb{color:var(--brand);font-weight:700;}
+
+/* 折叠说明 */
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:0 15px;margin-top:12px;}
+details summary{padding:13px 0;font-size:15px;font-weight:600;list-style:none;cursor:pointer;}
+details summary::-webkit-details-marker{display:none;}
+details[open] summary{border-bottom:1px dashed var(--line);}
+details .d{padding:11px 0 13px;font-size:14.5px;color:var(--ink2);line-height:1.7;}
+details .d b{color:var(--ink);}
+
+/* 告警横幅 */
+.banner{display:none;background:#FCEBEB;border:1px solid #F09595;color:#791F1F;
+  border-radius:12px;padding:12px 14px;font-size:14.5px;line-height:1.65;margin-top:12px;}
+.banner.on{display:block;}
+.banner b{color:#501313;}
+/* 保存提示 */
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);
+  background:rgba(35,32,28,.93);color:#fff;padding:9px 20px;border-radius:99px;
+  font-size:14.5px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99;}
+.toast.on{opacity:1;}
+.store-ok{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink3);}
+.store-ok .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);}
+.store-ok.bad .dot{background:#C0392B;}
+textarea.bk{width:100%;margin-top:9px;font-size:12.5px;line-height:1.5;padding:9px;
+  border:1px solid var(--line);border-radius:9px;background:#FBF9F6;color:var(--ink2);
+  font-family:inherit;display:none;}
+
+.ft{text-align:center;font-size:12.5px;color:var(--ink3);margin-top:22px;line-height:1.8;}
+.safebar{margin:18px 0 0;padding:14px;border:1px solid #E4CDA6;background:#FBF4E6;border-radius:14px;}
+.safe-tt{font-size:13.5px;color:#7A5A23;line-height:1.6;margin-bottom:10px;}
+.cloudcard{margin:18px 0 0;padding:14px;border:1px solid #BFD8C8;background:#EEF7F0;border-radius:14px;}
+.cc-tt{font-size:14.5px;color:#2E6B45;font-weight:600;margin-bottom:8px;}
+.cc-d{font-size:13px;color:#3C5A47;line-height:1.65;margin:0 0 10px;}
+.cc-row{display:flex;gap:8px;align-items:stretch;}
+.cc-in{flex:1;min-width:0;padding:10px 11px;border-radius:10px;border:1px solid #BFD8C8;font-size:13.5px;background:#fff;}
+.cc-in:focus{outline:none;border-color:var(--brand);}
+.ci{font-size:12.5px;margin-top:9px;line-height:1.5;}
+.ci.ok{color:#2E6B45;}
+.ci.warn{color:#9A6B12;}
+.btn-row{display:flex;gap:9px;margin-top:12px;}
+.btn{flex:1;padding:11px;border-radius:11px;border:1px solid var(--line);background:#fff;
+  font-size:14.5px;color:var(--ink2);text-align:center;}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hd-row">
+      <button class="icon-btn" id="prev" aria-label="前一天">‹</button>
+      <div style="text-align:center;flex:1;">
+        <div class="hd-date" id="hdDate">—</div>
+        <div class="hd-sub" id="hdSub">—</div>
+      </div>
+      <button class="icon-btn" id="next" aria-label="后一天">›</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="progress-card">
+    <div class="pro-top">
+      <div class="ring">
+        <svg width="74" height="74" viewBox="0 0 74 74">
+          <circle cx="37" cy="37" r="31" fill="none" stroke="#EDE7DE" stroke-width="8"></circle>
+          <circle id="ringFill" cx="37" cy="37" r="31" fill="none" stroke="#C0522F" stroke-width="8"
+                  stroke-linecap="round" stroke-dasharray="195" stroke-dashoffset="195"></circle>
+        </svg>
+        <div class="num" id="ringNum">0%</div>
+      </div>
+      <div class="pro-txt">
+        <div class="big" id="proBig">今天 0 项待完成</div>
+        <div class="small" id="proSmall">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="banner" class="banner"></div>
+
+  <div id="advice" class="advice"></div>
+
+  <div id="overTip"></div>
+
+  <div id="slots"></div>
+
+  <div class="btn-row">
+    <div class="btn" id="btnLight">今天想轻一点</div>
+    <div class="btn" id="btnStd">恢复标准量</div>
+  </div>
+
+  <div class="health" id="healthBox">
+    <div class="hh" id="healthHd"><span>晨起身体信号（决定明天加不加量）</span><span class="arw">›</span></div>
+    <div class="hb">
+      <div class="hrow"><label>睡眠</label>
+        <div class="opts" data-k="sleep">
+          <div class="opt" data-v="5">&lt;6h</div><div class="opt" data-v="6">6-7h</div>
+          <div class="opt" data-v="7">7-8h</div><div class="opt" data-v="8">8h+</div>
+        </div></div>
+      <div class="hrow"><label>晨起乏力</label>
+        <div class="opts" data-k="fatigue">
+          <div class="opt" data-v="0">没有</div><div class="opt" data-v="1">有点</div>
+          <div class="opt" data-v="2">明显乏力</div>
+        </div></div>
+      <div class="hrow"><label>齿痕舌</label>
+        <div class="opts" data-k="tongue">
+          <div class="opt" data-v="0">0 无</div><div class="opt" data-v="1">1 轻</div>
+          <div class="opt" data-v="2">2 中</div><div class="opt" data-v="3">3 重</div>
+        </div></div>
+      <div class="hrow"><label>静息心率</label>
+        <div style="flex:1"><input class="mini" id="rhr" type="number" inputmode="numeric" placeholder="次/分"></div></div>
+      <div class="hrow"><label>体重 kg</label>
+        <div style="flex:1"><input class="mini" id="wt" type="number" inputmode="decimal" step="0.1" placeholder="61.0"></div></div>
+      <div style="font-size:12.5px;color:var(--ink3);padding-top:8px;">填完自动保存。这条数据决定明天的训练档位。</div>
+    </div>
+  </div>
+
+  <div class="hist">
+    <div class="t">最近 7 天完成率</div>
+    <div class="bars" id="bars"></div>
+  </div>
+
+  <details>
+    <summary>为什么砍掉了 200 个俯卧撑？</summary>
+    <div class="d">
+      <p style="margin-top:0"><b>200 个俯卧撑练的是耐力，不是力量。</b>做到 20 个以上时，肌肉增长的刺激已经饱和，再往上堆次数只增加关节磨损和疲劳，对肌肉量、骨密度、基础代谢几乎不再有额外收益。</p>
+      <p><b>你真正缺的是下肢。</b>57 岁女性，大腿与臀部是决定行动能力、防跌倒、骨密度的关键部位；体脂率 33.4% 也远超理想区间。俯卧撑练得再多，改善不了这两件事。</p>
+      <p><b>所以把上肢改成提质量、把时间匀给下肢：</b>俯卧撑降到每组 8-12 次、放慢离心、抬高脚或收窄手以增加难度——总量从 200 降到 40 上下，单次负荷反而翻倍。省下的时间给深蹲、臀桥、弓步、单腿稳定。</p>
+      <p style="margin-bottom:0"><b>核心每天只做 6-8 分钟</b>，放在训练末尾。它的作用是保护腰椎、改善体态，不需要单独占据一天。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>档位是怎么自动算出来的？</summary>
+    <div class="d">
+      <p style="margin-top:0">每天打开时，程序会读<b>前一天</b>的完成情况和<b>今天早上</b>填的身体信号，自动落到三档之一：</p>
+      <p><b>轻量档</b>：昨天完成不足 70%，或睡眠少于 6 小时，或齿痕舌 ≥2 级，或自觉乏力，或静息心率比平时高 5 以上 → 减组数、减时间。</p>
+      <p><b>标准档</b>：昨天完成 70%-99% → 原计划不动。</p>
+      <p><b>进阶档</b>：昨天全部完成，且睡眠 ≥7 小时、齿痕舌 ≤1 级、不乏力 → 加一组或加 5 分钟。</p>
+      <p style="margin-bottom:0">连续 3 天完成不足一半 → 强制降到轻量并提示休息。任何时候你想手动调，用下面两个按钮临时覆盖。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>怎么用？</summary>
+    <div class="d">
+      <p style="margin-top:0">手机浏览器打开后，用菜单里的「添加到主屏幕」，之后像 App 一样一点就开。<b>数据存在这台手机里</b>，不联网也能打卡。</p>
+      <p style="margin-bottom:0">每天早上 6 点 WorkBuddy 会在微信提醒你今天的训练内容。打卡在这里做——AI 替你做不了俯卧撑，但能保证你不会忘记，也不用每天纠结练什么。</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>数据存不住 / 想换手机怎么办？</summary>
+    <div class="d">
+      <p style="margin-top:0"><b>先做这一件事：别在微信里打卡。</b>微信内置浏览器限制本机存储，而且「微信里打开」和「主屏幕图标打开」是两套互不相通的存档——在微信里勾完，从图标进去就是空的，看起来就像没保存。</p>
+      <p><b>正确做法：</b>用手机自带的浏览器（iPhone 用 Safari，安卓用 Chrome）打开链接 → 菜单里「添加到主屏幕」 → 以后<b>只从桌面图标进入</b>，不要从微信消息点进去。</p>
+      <p>如果页面顶部出现红色告警条，说明本机存储被禁用了（通常是无痕/隐私模式），换个正常窗口打开即可。</p>
+      <p>每次勾选后底部会闪一下「已保存」，同时页脚会显示<b>最近保存时间</b>——那是唯一能证明存住了的东西。</p>
+      <p><b>最稳的一招：存成文件。</b>点下面「存成文件」，它会下载一个 txt 到手机里（iPhone 存到「文件」App，安卓存到「下载」）。这个不依赖浏览器存储，清缓存、换手机都还在。丢了就点「从文件恢复」选它回来。</p>
+      <div class="btn-row">
+        <div class="btn primary" id="btnFile">存成文件（最稳）</div>
+        <div class="btn" id="btnFileIn">从文件恢复</div>
+      </div>
+      <input type="file" id="fileIn" accept=".txt,text/plain" style="display:none">
+      <div class="btn-row" style="margin-top:8px">
+        <div class="btn" id="btnExport">生成备份码</div>
+        <div class="btn" id="btnImport">用备份码恢复</div>
+      </div>
+      <textarea class="bk" id="backup" rows="4" placeholder="点「生成备份码」后这里会出现一段文字，复制保存到微信收藏；换手机或数据丢失时，粘贴回来点「用备份码恢复」。"></textarea>
+      <p style="margin-bottom:0;font-size:13px;color:var(--ink3)">备份码是文件方案的备选（发给别人、存微信收藏时用）。每周日存一次文件即可。</p>
+    </div>
+  </details>
+
+  <div class="safebar">
+    <div class="safe-tt">本机存储可能被 iOS 清掉。每周日点下面任意一个备份，丢了能全找回：</div>
+    <div class="btn-row">
+      <div class="btn primary" id="btnSafeFile">存成文件（推荐）</div>
+      <div class="btn" id="btnSafeCode">复制备份码</div>
+    </div>
+  </div>
+
+  <div class="cloudcard" id="cloudCard">
+    <div class="cc-tt">① 连接云端（根治「勾完再打开就没」）</div>
+    <p class="cc-d">用免费的 <b>GitHub</b> 账号（不用实名、不用绑卡，中国能访问）。新建一个「个人访问令牌(PAT)」并勾选 <b>gist</b> 权限，把那串令牌粘进来即可。App 会自动建好一个私密存档，打卡记录实时存进去，iOS 清本地也丢不了，换手机/网络都能用。</p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <input class="cc-in" id="ghToken" placeholder="粘贴 GitHub 个人访问令牌（ghp_ 开头的一长串）" inputmode="text" autocapitalize="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="cc-row" style="margin-top:10px">
+      <div class="btn primary" id="apiSave">保存并连接</div>
+    </div>
+    <div class="ci" id="cloudInfo">未连接云端：数据只在本机（会被 iOS 清）</div>
+  </div>
+
+  <div class="ft">
+    训练周期 <span id="ftRange"></span><br>
+    RPE ≤ 7 · 微汗即止 · 全程告诉你「怎么练」而不是「练多少」<br>
+    <span id="storeWhere">打卡数据仅保存在本机浏览器</span>
+    <div style="margin-top:8px"><span class="store-ok" id="storeFlag"><span class="dot"></span><span id="storeTxt">本机存储正常</span></span></div>
+    <div style="margin-top:6px" id="saveInfo">最近保存：—</div>
+    <div style="margin-top:6px" id="envInfo"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">已保存</div>
+
+<script id="plan-data" type="application/json">{"profile":{"age":57,"gender":"女","height_cm":164,"weight_kg":61.0,"bmi":22.7,"body_fat":33.4,"start_date":"2026-11-09","notes":"上肢推类基础较好（长期高次数俯卧撑），下肢与核心相对不足；RPE<=7 微汗即止"},"plan":{"2026-11-09":{"date":"2026-11-09","dow":"周一","dayIndex":1,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"下肢 · 股四头主导","items":[{"id":"sq_box","name":"箱式深蹲","light":"3×8","std":"3×12","plus":"4×12","cue":"轻触椅面即起，膝盖对准第二脚趾","equip":"自重+椅","desc":"练大腿前侧与臀。背挺直，臀轻碰椅面即起、别真坐下；膝盖对准第二脚趾，不内扣。"},{"id":"rev_lunge","name":"扶椅反向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"重心压在前脚脚跟，后膝轻点地","equip":"自重+椅","desc":"练臀腿。手扶椅背站稳，一脚向后迈，前膝弯到约 90°、重心压在前脚脚跟，后膝轻点地即起。"},{"id":"wall_sit","name":"靠墙静蹲","light":"2×20秒","std":"3×25秒","plus":"3×35秒","cue":"大腿与地面 45-60°，不必蹲太深","equip":"自重+墙","desc":"练大腿耐力、保护膝盖。背贴墙下滑到大腿与地面 45–60°，不必蹲太深，腰不离开墙，计时保持。"},{"id":"glute_bridge","name":"双腿臀桥","light":"2×12","std":"3×12","plus":"3×15","cue":"顶点夹臀停 1 秒，腰不要塌","equip":"自重","desc":"练臀与后链。仰卧屈膝，用臀部把骨盆顶起，顶点夹臀停 1 秒，腰不要塌。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"},{"id":"birddog","name":"鸟狗式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆不歪，水杯放背上不倒","equip":"自重","desc":"练核心与背。四点支撑，对侧手腿伸出，骨盆不歪，如背放杯水不倒。"}]},{"slot":"晚上","title":"壶铃 · 髋铰链","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"},{"id":"kb_goblet","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"慢下快起，最后一次保留余力","equip":"壶铃","desc":"练腿臀。慢下快起，最后一次保留余力。"}]}]},"2026-11-10":{"date":"2026-11-10","dow":"周二","dayIndex":2,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"上肢 · 推（胸肩三头）","items":[{"id":"pushup_incline","name":"上斜俯卧撑（手撑稳固台面）","light":"3×8","std":"3×12","plus":"4×12","cue":"下放 3 秒离心，胸贴台面再撑起","equip":"自重+台面","desc":"练胸与手臂。手撑稳固台面（高于地面），下放 3 秒离心，胸贴近台面再撑起。"},{"id":"pushup_decline","name":"脚垫高俯卧撑","light":"2×6","std":"3×8","plus":"3×10","cue":"脚放矮凳，肩保持下压不耸","equip":"自重+矮凳","desc":"练上胸与肩。脚放矮凳，身体前倾，肩保持下压不耸肩。"},{"id":"db_ohp","name":"哑铃肩上推","light":"2×10","std":"3×10","plus":"3×12","cue":"核心收紧，肋骨下沉，别塌腰代偿","equip":"哑铃","desc":"练肩。核心收紧、肋骨下沉，哑铃从肩推到头顶，别塌腰代偿。"},{"id":"db_floor_press","name":"地板哑铃卧推","light":"2×10","std":"3×10","plus":"3×12","cue":"肘落到地面停顿，节奏稳","equip":"哑铃","desc":"练胸。躺地，肘落到地面停顿，节奏稳，用胸发力推起。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"},{"id":"birddog","name":"鸟狗式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆不歪，水杯放背上不倒","equip":"自重","desc":"练核心与背。四点支撑，对侧手腿伸出，骨盆不歪，如背放杯水不倒。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk20","name":"低强度有氧 20 分钟","light":"15 分钟","std":"20 分钟","plus":"25 分钟","cue":"快走/椭圆/骑车，能边做边说话的强度","equip":"无","desc":"快走/椭圆/骑车，能边做边说话的强度，不出大汗。"},{"id":"breathe","name":"训练后放松呼吸 3 分钟","light":"3 分钟","std":"3 分钟","plus":"5 分钟","cue":"鼻吸口呼，6 秒一次，帮助心率回落","equip":"无","desc":"训练后放松。鼻吸口呼，6 秒一次，帮助心率回落。"}]}]},"2026-11-11":{"date":"2026-11-11","dow":"周三","dayIndex":3,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"下肢 · 髋与后链","items":[{"id":"rdl_db","name":"哑铃罗马尼亚硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"髋往后推，全程腰背平直","equip":"哑铃","desc":"练臀与大腿后侧。哑铃贴腿，髋往后推、屁股向后坐，腰背始终平直，感到大腿后侧拉伸再起身。"},{"id":"goblet_sq","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"壶铃贴胸，肘向下夹，蹲到大腿平行","equip":"壶铃","desc":"练腿臀整体。壶铃抱胸前、肘向下夹，蹲到大腿接近平行，膝盖跟脚尖同向。"},{"id":"sl_bridge","name":"单腿臀桥","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆保持水平，别塌向一侧","equip":"自重","desc":"练单侧臀。一腿抬起，只用一条腿把骨盆顶起，骨盆保持水平，别塌向一侧。"},{"id":"bul_split","name":"扶椅保加利亚分腿蹲","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后脚搭椅，前膝缓慢下放 3 秒","equip":"自重+椅","desc":"练单腿力量。后脚搭椅，前膝缓慢下放 3 秒，前脚脚跟发力站起。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"晚上","title":"放松与呼吸","items":[{"id":"walk_easy","name":"傍晚放松步行 10 分钟","light":"10 分钟","std":"10 分钟","plus":"15 分钟","cue":"不计入训练，纯粹松一松","equip":"无","desc":"傍晚放松步行：不计入训练，纯粹松一松，慢走 10–15 分钟。"}]}]},"2026-11-12":{"date":"2026-11-12","dow":"周四","dayIndex":4,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"上肢 · 拉（背與二头）","items":[{"id":"db_row","name":"哑铃单臂划船","light":"2×10/侧","std":"3×10/侧","plus":"3×12/侧","cue":"肘贴身向后，想象拉口袋拉链","equip":"哑铃","desc":"练背。一手撑凳一腿跪，肘贴身向后拉，想象拉口袋拉链。"},{"id":"kb_row","name":"壶铃俯身划船","light":"2×10","std":"3×12","plus":"3×14","cue":"背平直，用背发力不是手拽","equip":"壶铃","desc":"练背。背平直，用背发力把壶铃拉向腰侧，不是用手拽。"},{"id":"inverted_row","name":"桌下反向划船","light":"2×6","std":"3×8","plus":"3×10","cue":"身体绷成一条直线，胸找桌沿","equip":"桌/弹力带","desc":"练背。仰卧桌下，身体绷直，胸去找桌沿，脚可屈膝降难度。"},{"id":"face_pull","name":"俯身 Y-T-W","light":"2×8","std":"2×10","plus":"3×10","cue":"纠正圆肩，慢，别甩","equip":"自重/小哑铃","desc":"练肩后束与姿态。俯身，手臂做 Y、T、W 慢动作，纠正圆肩，别甩。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk25","name":"低强度有氧 25 分钟","light":"18 分钟","std":"25 分钟","plus":"30 分钟","cue":"微汗即可，不要追心率，心脏 Zone2","equip":"无","desc":"低强度有氧。微汗即可，不追心率，保持在能说话的区间。"},{"id":"stretch","name":"下肢拉伸 5 分钟","light":"5 分钟","std":"5 分钟","plus":"8 分钟","cue":"髋屈肌+股四头+小腿，静态不弹振","equip":"无","desc":"下肢拉伸：髋屈肌+股四头+小腿，静态不弹振，每个保持 20–30 秒。"}]},{"slot":"晚上","title":"壶铃 · 上肢与稳定","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"},{"id":"kb_goblet","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"慢下快起，最后一次保留余力","equip":"壶铃","desc":"练腿臀。慢下快起，最后一次保留余力。"}]}]},"2026-11-13":{"date":"2026-11-13","dow":"周五","dayIndex":5,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"下肢 · 单腿与侧向","items":[{"id":"step_up","name":"登阶（15-20cm）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"全脚掌踩实，靠前脚发力站起","equip":"台阶","desc":"练单腿发力。踩 15–20cm 台阶，全脚掌踩实，靠前脚把身体推上去，两侧轮流。"},{"id":"lat_lunge","name":"侧向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"屈膝侧坐髋，另一腿伸直，脚尖朝前","equip":"自重","desc":"练大腿内侧与侧向稳定。向一侧跨出下蹲，屈膝侧坐髋，另一腿伸直、脚尖朝前。"},{"id":"sl_rdl","name":"扶墙单腿硬拉","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿向后抬起与身体成一线","equip":"自重","desc":"练后链与平衡。一手扶墙，一腿向后抬起与身体成一线，髋往前推再收回。"},{"id":"clamshell","name":"蚌式开合","light":"2×12/侧","std":"3×15/侧","plus":"3×20/侧","cue":"骨盆不后倒，只用臀部发力","equip":"弹力带","desc":"练臀中肌。侧躺，骨盆不后倒，膝盖像贝壳一样打开再合拢，只用臀部发力。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]}]},"2026-11-14":{"date":"2026-11-14","dow":"周六","dayIndex":6,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"有氧","title":"周末慢跑","items":[{"id":"run3k","name":"慢跑 3 公里","light":"慢跑 2 公里+走 1 公里","std":"慢跑 3 公里","plus":"慢跑 3 公里+最后一公里提速","cue":"能说话的速度，配速不重要，跑姿别塌","equip":"跑鞋","desc":"慢跑 3 公里。能说话的速度，配速不重要，跑姿别塌。"},{"id":"run_core","name":"跑后核心 5 分钟","light":"侧平板+猫牛","std":"核心 C 套餐简化版","plus":"核心 C 全套","cue":"跑完别马上坐下，趁热做","equip":"自重","desc":"跑后核心。跑完别马上坐，趁热做核心 C 简化版。"}]}]},"2026-11-15":{"date":"2026-11-15","dow":"周日","dayIndex":7,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"恢复","title":"主动恢复日","items":[{"id":"zhanzhuang","name":"站桩 / 八段锦","light":"15 分钟","std":"20 分钟","plus":"20 分钟","cue":"全天唯一“必修项”，主动恢复就靠它","equip":"无","desc":"站桩/八段锦：全天唯一必修，主动恢复，放松精神调气息。"},{"id":"outdoor","name":"户外散步或赏绿 20 分钟","light":"20 分钟","std":"30 分钟","plus":"40 分钟","cue":"纯放松不计数步，喘匀气","equip":"无","desc":"户外散步赏绿：纯放松不计数步，喘匀气，看看绿植。"}]}]},"2026-11-16":{"date":"2026-11-16","dow":"周一","dayIndex":8,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"下肢 · 功能力量","items":[{"id":"goblet_box_sq","name":"壶铃箱式深蹲","light":"3×8","std":"3×10","plus":"4×10","cue":"坐到箱面即起，控制节奏","equip":"壶铃","desc":"练腿臀。坐到箱面即起，控制节奏，不弹震。"},{"id":"hip_thrust","name":"肩胛靠凳臀推","light":"2×10","std":"3×12","plus":"3×15","cue":"顶点骨盆后倾，别用腰顶","equip":"哑铃/壶铃","desc":"练臀。上背靠凳，壶铃放髋，顶起时骨盆后倾夹臀，别用腰顶。"},{"id":"cur_lunge","name":"后撤交叉弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿斜向后撤，前膝不超过脚尖过多","equip":"自重","desc":"练腿臀与协调。后腿斜向后撤交叉，前膝不超过脚尖过多，控制下放。"},{"id":"sit_to_stand","name":"坐立转换（STS）","light":"2×10","std":"3×12","plus":"3×15","cue":"生活最实用的腿部力量，不许用手撑","equip":"椅子","desc":"练生活最实用的腿部力量。从椅子站起再坐下，不许用手撑，慢起慢落。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]},{"slot":"晚上","title":"壶铃 · 髋铰链","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"},{"id":"kb_goblet","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"慢下快起，最后一次保留余力","equip":"壶铃","desc":"练腿臀。慢下快起，最后一次保留余力。"}]}]},"2026-11-17":{"date":"2026-11-17","dow":"周二","dayIndex":9,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"上肢 · 肩与手臂稳定","items":[{"id":"pushup_diamond","name":"窄距（钻石）俯卧撑","light":"2×6","std":"3×8","plus":"3×10","cue":"双手成菱形，肘向后夹","equip":"自重","desc":"练三头与胸内侧。双手成菱形（拇指食指相触），肘向后夹。"},{"id":"pushup_ecc","name":"慢速离心俯卧撑","light":"3×5","std":"3×6","plus":"3×8","cue":"下放 5 秒，撑不起来就上斜","equip":"自重","desc":"练胸臂力量。下放 5 秒慢放，撑不起来就退回上斜版。"},{"id":"lat_raise","name":"哑铃侧平举","light":"2×10","std":"3×12","plus":"3×15","cue":"抬到肩高即可，别耸肩甩 weight","equip":"哑铃","desc":"练肩中束。抬到肩高即可，别耸肩、别甩重量，慢起慢落。"},{"id":"tricep_ext","name":"哑铃过头臂屈伸","light":"2×10","std":"3×10","plus":"3×12","cue":"大臂贴近耳朵，肘不往外开","equip":"哑铃","desc":"练三头。大臂贴耳，小臂向后放下再伸直，肘不往外开。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk20","name":"低强度有氧 20 分钟","light":"15 分钟","std":"20 分钟","plus":"25 分钟","cue":"快走/椭圆/骑车，能边做边说话的强度","equip":"无","desc":"快走/椭圆/骑车，能边做边说话的强度，不出大汗。"},{"id":"breathe","name":"训练后放松呼吸 3 分钟","light":"3 分钟","std":"3 分钟","plus":"5 分钟","cue":"鼻吸口呼，6 秒一次，帮助心率回落","equip":"无","desc":"训练后放松。鼻吸口呼，6 秒一次，帮助心率回落。"}]}]},"2026-11-18":{"date":"2026-11-18","dow":"周三","dayIndex":10,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"下肢 · 股四头主导","items":[{"id":"sq_box","name":"箱式深蹲","light":"3×8","std":"3×12","plus":"4×12","cue":"轻触椅面即起，膝盖对准第二脚趾","equip":"自重+椅","desc":"练大腿前侧与臀。背挺直，臀轻碰椅面即起、别真坐下；膝盖对准第二脚趾，不内扣。"},{"id":"rev_lunge","name":"扶椅反向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"重心压在前脚脚跟，后膝轻点地","equip":"自重+椅","desc":"练臀腿。手扶椅背站稳，一脚向后迈，前膝弯到约 90°、重心压在前脚脚跟，后膝轻点地即起。"},{"id":"wall_sit","name":"靠墙静蹲","light":"2×20秒","std":"3×25秒","plus":"3×35秒","cue":"大腿与地面 45-60°，不必蹲太深","equip":"自重+墙","desc":"练大腿耐力、保护膝盖。背贴墙下滑到大腿与地面 45–60°，不必蹲太深，腰不离开墙，计时保持。"},{"id":"glute_bridge","name":"双腿臀桥","light":"2×12","std":"3×12","plus":"3×15","cue":"顶点夹臀停 1 秒，腰不要塌","equip":"自重","desc":"练臀与后链。仰卧屈膝，用臀部把骨盆顶起，顶点夹臀停 1 秒，腰不要塌。"}]},{"slot":"早上","title":"核心 D 组","items":[{"id":"step_touch","name":"仰卧交替点脚跟","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"骨盆不动，只有腿动","equip":"自重","desc":"练下腹。仰卧，骨盆不动，交替点脚跟，只有腿动。"},{"id":"birddog2","name":"鸟狗式（离心慢放）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"伸展停 2 秒再收回","equip":"自重","desc":"练核心稳定。伸展后停 2 秒再收回。"}]},{"slot":"晚上","title":"放松与呼吸","items":[{"id":"walk_easy","name":"傍晚放松步行 10 分钟","light":"10 分钟","std":"10 分钟","plus":"15 分钟","cue":"不计入训练，纯粹松一松","equip":"无","desc":"傍晚放松步行：不计入训练，纯粹松一松，慢走 10–15 分钟。"}]}]},"2026-11-19":{"date":"2026-11-19","dow":"周四","dayIndex":11,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"上肢 · 推拉综合","items":[{"id":"pushup_std","name":"标准俯卧撑（重质不重量）","light":"3×8","std":"3×10","plus":"3×12","cue":"身体成一条直线，每一下都做到位","equip":"自重","desc":"练胸臂整体。身体成一条直线，每一下都做到位，不塌腰不撅臀。"},{"id":"db_alt_press","name":"哑铃交替卧推","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"交替时用核心抗旋转","equip":"哑铃","desc":"练胸与核心抗旋转。躺地交替推，用核心稳住身体不晃。"},{"id":"bent_row","name":"俯身哑铃划船","light":"2×10","std":"3×12","plus":"3×14","cue":"髋铰链姿势，起身时用腿不用腰","equip":"哑铃","desc":"练背。髋铰链姿势，拉起用背，起身时用腿不用腰。"},{"id":"band_pulldown","name":"弹力带下拉","light":"2×12","std":"3×15","plus":"3×18","cue":"下拉到锁骨，慢放回","equip":"弹力带","desc":"练背与肩。双手拉弹力带到锁骨，慢放回，感受背部收缩。"}]},{"slot":"早上","title":"核心 D 组","items":[{"id":"step_touch","name":"仰卧交替点脚跟","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"骨盆不动，只有腿动","equip":"自重","desc":"练下腹。仰卧，骨盆不动，交替点脚跟，只有腿动。"},{"id":"birddog2","name":"鸟狗式（离心慢放）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"伸展停 2 秒再收回","equip":"自重","desc":"练核心稳定。伸展后停 2 秒再收回。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk25","name":"低强度有氧 25 分钟","light":"18 分钟","std":"25 分钟","plus":"30 分钟","cue":"微汗即可，不要追心率，心脏 Zone2","equip":"无","desc":"低强度有氧。微汗即可，不追心率，保持在能说话的区间。"},{"id":"stretch","name":"下肢拉伸 5 分钟","light":"5 分钟","std":"5 分钟","plus":"8 分钟","cue":"髋屈肌+股四头+小腿，静态不弹振","equip":"无","desc":"下肢拉伸：髋屈肌+股四头+小腿，静态不弹振，每个保持 20–30 秒。"}]},{"slot":"晚上","title":"壶铃 · 上肢与稳定","items":[{"id":"kb_one_row","name":"单臂壶铃划船","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"另一手撑凳，背平直","equip":"壶铃","desc":"练背。一手撑凳，另一手划壶铃，背平直。"},{"id":"kb_overhead","name":"壶铃单臂过头走","light":"2×20秒/侧","std":"3×25秒/侧","plus":"3×30秒/侧","cue":"手臂锁死，眼睛平视，练肩稳定","equip":"壶铃（轻）","desc":"练肩稳定。手臂锁死，眼睛平视，壶铃轻。"},{"id":"kb_getup","name":"土耳其起立半程（至肘撑）","light":"2×4/侧","std":"3×5/侧","plus":"3×6/侧","cue":"慢，眼睛盯住壶铃，不确定就跳过","equip":"壶铃（轻）","desc":"练全身稳定。慢，眼睛盯住壶铃，不确定就跳过。"}]}]},"2026-11-20":{"date":"2026-11-20","dow":"周五","dayIndex":12,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"下肢 · 髋与后链","items":[{"id":"rdl_db","name":"哑铃罗马尼亚硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"髋往后推，全程腰背平直","equip":"哑铃","desc":"练臀与大腿后侧。哑铃贴腿，髋往后推、屁股向后坐，腰背始终平直，感到大腿后侧拉伸再起身。"},{"id":"goblet_sq","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"壶铃贴胸，肘向下夹，蹲到大腿平行","equip":"壶铃","desc":"练腿臀整体。壶铃抱胸前、肘向下夹，蹲到大腿接近平行，膝盖跟脚尖同向。"},{"id":"sl_bridge","name":"单腿臀桥","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆保持水平，别塌向一侧","equip":"自重","desc":"练单侧臀。一腿抬起，只用一条腿把骨盆顶起，骨盆保持水平，别塌向一侧。"},{"id":"bul_split","name":"扶椅保加利亚分腿蹲","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后脚搭椅，前膝缓慢下放 3 秒","equip":"自重+椅","desc":"练单腿力量。后脚搭椅，前膝缓慢下放 3 秒，前脚脚跟发力站起。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"},{"id":"birddog","name":"鸟狗式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆不歪，水杯放背上不倒","equip":"自重","desc":"练核心与背。四点支撑，对侧手腿伸出，骨盆不歪，如背放杯水不倒。"}]}]},"2026-11-21":{"date":"2026-11-21","dow":"周六","dayIndex":13,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"有氧","title":"周末慢跑","items":[{"id":"run3k","name":"慢跑 3 公里","light":"慢跑 2 公里+走 1 公里","std":"慢跑 3 公里","plus":"慢跑 3 公里+最后一公里提速","cue":"能说话的速度，配速不重要，跑姿别塌","equip":"跑鞋","desc":"慢跑 3 公里。能说话的速度，配速不重要，跑姿别塌。"},{"id":"run_core","name":"跑后核心 5 分钟","light":"侧平板+猫牛","std":"核心 C 套餐简化版","plus":"核心 C 全套","cue":"跑完别马上坐下，趁热做","equip":"自重","desc":"跑后核心。跑完别马上坐，趁热做核心 C 简化版。"}]}]},"2026-11-22":{"date":"2026-11-22","dow":"周日","dayIndex":14,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"恢复","title":"主动恢复日","items":[{"id":"zhanzhuang","name":"站桩 / 八段锦","light":"15 分钟","std":"20 分钟","plus":"20 分钟","cue":"全天唯一“必修项”，主动恢复就靠它","equip":"无","desc":"站桩/八段锦：全天唯一必修，主动恢复，放松精神调气息。"},{"id":"outdoor","name":"户外散步或赏绿 20 分钟","light":"20 分钟","std":"30 分钟","plus":"40 分钟","cue":"纯放松不计数步，喘匀气","equip":"无","desc":"户外散步赏绿：纯放松不计数步，喘匀气，看看绿植。"}]}]},"2026-11-23":{"date":"2026-11-23","dow":"周一","dayIndex":15,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"下肢 · 髋与后链","items":[{"id":"rdl_db","name":"哑铃罗马尼亚硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"髋往后推，全程腰背平直","equip":"哑铃","desc":"练臀与大腿后侧。哑铃贴腿，髋往后推、屁股向后坐，腰背始终平直，感到大腿后侧拉伸再起身。"},{"id":"goblet_sq","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"壶铃贴胸，肘向下夹，蹲到大腿平行","equip":"壶铃","desc":"练腿臀整体。壶铃抱胸前、肘向下夹，蹲到大腿接近平行，膝盖跟脚尖同向。"},{"id":"sl_bridge","name":"单腿臀桥","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆保持水平，别塌向一侧","equip":"自重","desc":"练单侧臀。一腿抬起，只用一条腿把骨盆顶起，骨盆保持水平，别塌向一侧。"},{"id":"bul_split","name":"扶椅保加利亚分腿蹲","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后脚搭椅，前膝缓慢下放 3 秒","equip":"自重+椅","desc":"练单腿力量。后脚搭椅，前膝缓慢下放 3 秒，前脚脚跟发力站起。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"晚上","title":"壶铃 · 髋铰链","items":[{"id":"kb_one_row","name":"单臂壶铃划船","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"另一手撑凳，背平直","equip":"壶铃","desc":"练背。一手撑凳，另一手划壶铃，背平直。"},{"id":"kb_overhead","name":"壶铃单臂过头走","light":"2×20秒/侧","std":"3×25秒/侧","plus":"3×30秒/侧","cue":"手臂锁死，眼睛平视，练肩稳定","equip":"壶铃（轻）","desc":"练肩稳定。手臂锁死，眼睛平视，壶铃轻。"},{"id":"kb_getup","name":"土耳其起立半程（至肘撑）","light":"2×4/侧","std":"3×5/侧","plus":"3×6/侧","cue":"慢，眼睛盯住壶铃，不确定就跳过","equip":"壶铃（轻）","desc":"练全身稳定。慢，眼睛盯住壶铃，不确定就跳过。"}]}]},"2026-11-24":{"date":"2026-11-24","dow":"周二","dayIndex":16,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"上肢 · 拉（背與二头）","items":[{"id":"db_row","name":"哑铃单臂划船","light":"2×10/侧","std":"3×10/侧","plus":"3×12/侧","cue":"肘贴身向后，想象拉口袋拉链","equip":"哑铃","desc":"练背。一手撑凳一腿跪，肘贴身向后拉，想象拉口袋拉链。"},{"id":"kb_row","name":"壶铃俯身划船","light":"2×10","std":"3×12","plus":"3×14","cue":"背平直，用背发力不是手拽","equip":"壶铃","desc":"练背。背平直，用背发力把壶铃拉向腰侧，不是用手拽。"},{"id":"inverted_row","name":"桌下反向划船","light":"2×6","std":"3×8","plus":"3×10","cue":"身体绷成一条直线，胸找桌沿","equip":"桌/弹力带","desc":"练背。仰卧桌下，身体绷直，胸去找桌沿，脚可屈膝降难度。"},{"id":"face_pull","name":"俯身 Y-T-W","light":"2×8","std":"2×10","plus":"3×10","cue":"纠正圆肩，慢，别甩","equip":"自重/小哑铃","desc":"练肩后束与姿态。俯身，手臂做 Y、T、W 慢动作，纠正圆肩，别甩。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk20","name":"低强度有氧 20 分钟","light":"15 分钟","std":"20 分钟","plus":"25 分钟","cue":"快走/椭圆/骑车，能边做边说话的强度","equip":"无","desc":"快走/椭圆/骑车，能边做边说话的强度，不出大汗。"},{"id":"breathe","name":"训练后放松呼吸 3 分钟","light":"3 分钟","std":"3 分钟","plus":"5 分钟","cue":"鼻吸口呼，6 秒一次，帮助心率回落","equip":"无","desc":"训练后放松。鼻吸口呼，6 秒一次，帮助心率回落。"}]}]},"2026-11-25":{"date":"2026-11-25","dow":"周三","dayIndex":17,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"下肢 · 单腿与侧向","items":[{"id":"step_up","name":"登阶（15-20cm）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"全脚掌踩实，靠前脚发力站起","equip":"台阶","desc":"练单腿发力。踩 15–20cm 台阶，全脚掌踩实，靠前脚把身体推上去，两侧轮流。"},{"id":"lat_lunge","name":"侧向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"屈膝侧坐髋，另一腿伸直，脚尖朝前","equip":"自重","desc":"练大腿内侧与侧向稳定。向一侧跨出下蹲，屈膝侧坐髋，另一腿伸直、脚尖朝前。"},{"id":"sl_rdl","name":"扶墙单腿硬拉","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿向后抬起与身体成一线","equip":"自重","desc":"练后链与平衡。一手扶墙，一腿向后抬起与身体成一线，髋往前推再收回。"},{"id":"clamshell","name":"蚌式开合","light":"2×12/侧","std":"3×15/侧","plus":"3×20/侧","cue":"骨盆不后倒，只用臀部发力","equip":"弹力带","desc":"练臀中肌。侧躺，骨盆不后倒，膝盖像贝壳一样打开再合拢，只用臀部发力。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]},{"slot":"晚上","title":"放松与呼吸","items":[{"id":"walk_easy","name":"傍晚放松步行 10 分钟","light":"10 分钟","std":"10 分钟","plus":"15 分钟","cue":"不计入训练，纯粹松一松","equip":"无","desc":"傍晚放松步行：不计入训练，纯粹松一松，慢走 10–15 分钟。"}]}]},"2026-11-26":{"date":"2026-11-26","dow":"周四","dayIndex":18,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"上肢 · 推（胸肩三头）","items":[{"id":"pushup_incline","name":"上斜俯卧撑（手撑稳固台面）","light":"3×8","std":"3×12","plus":"4×12","cue":"下放 3 秒离心，胸贴台面再撑起","equip":"自重+台面","desc":"练胸与手臂。手撑稳固台面（高于地面），下放 3 秒离心，胸贴近台面再撑起。"},{"id":"pushup_decline","name":"脚垫高俯卧撑","light":"2×6","std":"3×8","plus":"3×10","cue":"脚放矮凳，肩保持下压不耸","equip":"自重+矮凳","desc":"练上胸与肩。脚放矮凳，身体前倾，肩保持下压不耸肩。"},{"id":"db_ohp","name":"哑铃肩上推","light":"2×10","std":"3×10","plus":"3×12","cue":"核心收紧，肋骨下沉，别塌腰代偿","equip":"哑铃","desc":"练肩。核心收紧、肋骨下沉，哑铃从肩推到头顶，别塌腰代偿。"},{"id":"db_floor_press","name":"地板哑铃卧推","light":"2×10","std":"3×10","plus":"3×12","cue":"肘落到地面停顿，节奏稳","equip":"哑铃","desc":"练胸。躺地，肘落到地面停顿，节奏稳，用胸发力推起。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk25","name":"低强度有氧 25 分钟","light":"18 分钟","std":"25 分钟","plus":"30 分钟","cue":"微汗即可，不要追心率，心脏 Zone2","equip":"无","desc":"低强度有氧。微汗即可，不追心率，保持在能说话的区间。"},{"id":"stretch","name":"下肢拉伸 5 分钟","light":"5 分钟","std":"5 分钟","plus":"8 分钟","cue":"髋屈肌+股四头+小腿，静态不弹振","equip":"无","desc":"下肢拉伸：髋屈肌+股四头+小腿，静态不弹振，每个保持 20–30 秒。"}]},{"slot":"晚上","title":"壶铃 · 上肢与稳定","items":[{"id":"kb_one_row","name":"单臂壶铃划船","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"另一手撑凳，背平直","equip":"壶铃","desc":"练背。一手撑凳，另一手划壶铃，背平直。"},{"id":"kb_overhead","name":"壶铃单臂过头走","light":"2×20秒/侧","std":"3×25秒/侧","plus":"3×30秒/侧","cue":"手臂锁死，眼睛平视，练肩稳定","equip":"壶铃（轻）","desc":"练肩稳定。手臂锁死，眼睛平视，壶铃轻。"},{"id":"kb_getup","name":"土耳其起立半程（至肘撑）","light":"2×4/侧","std":"3×5/侧","plus":"3×6/侧","cue":"慢，眼睛盯住壶铃，不确定就跳过","equip":"壶铃（轻）","desc":"练全身稳定。慢，眼睛盯住壶铃，不确定就跳过。"}]}]},"2026-11-27":{"date":"2026-11-27","dow":"周五","dayIndex":19,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"下肢 · 功能力量","items":[{"id":"goblet_box_sq","name":"壶铃箱式深蹲","light":"3×8","std":"3×10","plus":"4×10","cue":"坐到箱面即起，控制节奏","equip":"壶铃","desc":"练腿臀。坐到箱面即起，控制节奏，不弹震。"},{"id":"hip_thrust","name":"肩胛靠凳臀推","light":"2×10","std":"3×12","plus":"3×15","cue":"顶点骨盆后倾，别用腰顶","equip":"哑铃/壶铃","desc":"练臀。上背靠凳，壶铃放髋，顶起时骨盆后倾夹臀，别用腰顶。"},{"id":"cur_lunge","name":"后撤交叉弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿斜向后撤，前膝不超过脚尖过多","equip":"自重","desc":"练腿臀与协调。后腿斜向后撤交叉，前膝不超过脚尖过多，控制下放。"},{"id":"sit_to_stand","name":"坐立转换（STS）","light":"2×10","std":"3×12","plus":"3×15","cue":"生活最实用的腿部力量，不许用手撑","equip":"椅子","desc":"练生活最实用的腿部力量。从椅子站起再坐下，不许用手撑，慢起慢落。"}]},{"slot":"早上","title":"核心 D 组","items":[{"id":"step_touch","name":"仰卧交替点脚跟","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"骨盆不动，只有腿动","equip":"自重","desc":"练下腹。仰卧，骨盆不动，交替点脚跟，只有腿动。"},{"id":"birddog2","name":"鸟狗式（离心慢放）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"伸展停 2 秒再收回","equip":"自重","desc":"练核心稳定。伸展后停 2 秒再收回。"}]}]},"2026-11-28":{"date":"2026-11-28","dow":"周六","dayIndex":20,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"有氧","title":"周末慢跑","items":[{"id":"run3k","name":"慢跑 3 公里","light":"慢跑 2 公里+走 1 公里","std":"慢跑 3 公里","plus":"慢跑 3 公里+最后一公里提速","cue":"能说话的速度，配速不重要，跑姿别塌","equip":"跑鞋","desc":"慢跑 3 公里。能说话的速度，配速不重要，跑姿别塌。"},{"id":"run_core","name":"跑后核心 5 分钟","light":"侧平板+猫牛","std":"核心 C 套餐简化版","plus":"核心 C 全套","cue":"跑完别马上坐下，趁热做","equip":"自重","desc":"跑后核心。跑完别马上坐，趁热做核心 C 简化版。"}]}]},"2026-11-29":{"date":"2026-11-29","dow":"周日","dayIndex":21,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"恢复","title":"主动恢复日","items":[{"id":"zhanzhuang","name":"站桩 / 八段锦","light":"15 分钟","std":"20 分钟","plus":"20 分钟","cue":"全天唯一“必修项”，主动恢复就靠它","equip":"无","desc":"站桩/八段锦：全天唯一必修，主动恢复，放松精神调气息。"},{"id":"outdoor","name":"户外散步或赏绿 20 分钟","light":"20 分钟","std":"30 分钟","plus":"40 分钟","cue":"纯放松不计数步，喘匀气","equip":"无","desc":"户外散步赏绿：纯放松不计数步，喘匀气，看看绿植。"}]}]},"2026-11-30":{"date":"2026-11-30","dow":"周一","dayIndex":22,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"下肢 · 股四头主导","items":[{"id":"sq_box","name":"箱式深蹲","light":"3×8","std":"3×12","plus":"4×12","cue":"轻触椅面即起，膝盖对准第二脚趾","equip":"自重+椅","desc":"练大腿前侧与臀。背挺直，臀轻碰椅面即起、别真坐下；膝盖对准第二脚趾，不内扣。"},{"id":"rev_lunge","name":"扶椅反向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"重心压在前脚脚跟，后膝轻点地","equip":"自重+椅","desc":"练臀腿。手扶椅背站稳，一脚向后迈，前膝弯到约 90°、重心压在前脚脚跟，后膝轻点地即起。"},{"id":"wall_sit","name":"靠墙静蹲","light":"2×20秒","std":"3×25秒","plus":"3×35秒","cue":"大腿与地面 45-60°，不必蹲太深","equip":"自重+墙","desc":"练大腿耐力、保护膝盖。背贴墙下滑到大腿与地面 45–60°，不必蹲太深，腰不离开墙，计时保持。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"},{"id":"birddog","name":"鸟狗式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆不歪，水杯放背上不倒","equip":"自重","desc":"练核心与背。四点支撑，对侧手腿伸出，骨盆不歪，如背放杯水不倒。"}]},{"slot":"晚上","title":"壶铃 · 髋铰链","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"}]}]},"2026-12-01":{"date":"2026-12-01","dow":"周二","dayIndex":23,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"上肢 · 推（胸肩三头）","items":[{"id":"pushup_incline","name":"上斜俯卧撑（手撑稳固台面）","light":"3×8","std":"3×12","plus":"4×12","cue":"下放 3 秒离心，胸贴台面再撑起","equip":"自重+台面","desc":"练胸与手臂。手撑稳固台面（高于地面），下放 3 秒离心，胸贴近台面再撑起。"},{"id":"pushup_decline","name":"脚垫高俯卧撑","light":"2×6","std":"3×8","plus":"3×10","cue":"脚放矮凳，肩保持下压不耸","equip":"自重+矮凳","desc":"练上胸与肩。脚放矮凳，身体前倾，肩保持下压不耸肩。"},{"id":"db_ohp","name":"哑铃肩上推","light":"2×10","std":"3×10","plus":"3×12","cue":"核心收紧，肋骨下沉，别塌腰代偿","equip":"哑铃","desc":"练肩。核心收紧、肋骨下沉，哑铃从肩推到头顶，别塌腰代偿。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk20","name":"低强度有氧 20 分钟","light":"15 分钟","std":"20 分钟","plus":"25 分钟","cue":"快走/椭圆/骑车，能边做边说话的强度","equip":"无","desc":"快走/椭圆/骑车，能边做边说话的强度，不出大汗。"}]}]},"2026-12-02":{"date":"2026-12-02","dow":"周三","dayIndex":24,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"下肢 · 髋与后链","items":[{"id":"rdl_db","name":"哑铃罗马尼亚硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"髋往后推，全程腰背平直","equip":"哑铃","desc":"练臀与大腿后侧。哑铃贴腿，髋往后推、屁股向后坐，腰背始终平直，感到大腿后侧拉伸再起身。"},{"id":"goblet_sq","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"壶铃贴胸，肘向下夹，蹲到大腿平行","equip":"壶铃","desc":"练腿臀整体。壶铃抱胸前、肘向下夹，蹲到大腿接近平行，膝盖跟脚尖同向。"},{"id":"sl_bridge","name":"单腿臀桥","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆保持水平，别塌向一侧","equip":"自重","desc":"练单侧臀。一腿抬起，只用一条腿把骨盆顶起，骨盆保持水平，别塌向一侧。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"晚上","title":"放松与呼吸","items":[{"id":"walk_easy","name":"傍晚放松步行 10 分钟","light":"10 分钟","std":"10 分钟","plus":"15 分钟","cue":"不计入训练，纯粹松一松","equip":"无","desc":"傍晚放松步行：不计入训练，纯粹松一松，慢走 10–15 分钟。"}]}]},"2026-12-03":{"date":"2026-12-03","dow":"周四","dayIndex":25,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"上肢 · 拉（背與二头）","items":[{"id":"db_row","name":"哑铃单臂划船","light":"2×10/侧","std":"3×10/侧","plus":"3×12/侧","cue":"肘贴身向后，想象拉口袋拉链","equip":"哑铃","desc":"练背。一手撑凳一腿跪，肘贴身向后拉，想象拉口袋拉链。"},{"id":"kb_row","name":"壶铃俯身划船","light":"2×10","std":"3×12","plus":"3×14","cue":"背平直，用背发力不是手拽","equip":"壶铃","desc":"练背。背平直，用背发力把壶铃拉向腰侧，不是用手拽。"},{"id":"inverted_row","name":"桌下反向划船","light":"2×6","std":"3×8","plus":"3×10","cue":"身体绷成一条直线，胸找桌沿","equip":"桌/弹力带","desc":"练背。仰卧桌下，身体绷直，胸去找桌沿，脚可屈膝降难度。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk25","name":"低强度有氧 25 分钟","light":"18 分钟","std":"25 分钟","plus":"30 分钟","cue":"微汗即可，不要追心率，心脏 Zone2","equip":"无","desc":"低强度有氧。微汗即可，不追心率，保持在能说话的区间。"}]},{"slot":"晚上","title":"壶铃 · 上肢与稳定","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"}]}]},"2026-12-04":{"date":"2026-12-04","dow":"周五","dayIndex":26,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"下肢 · 单腿与侧向","items":[{"id":"step_up","name":"登阶（15-20cm）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"全脚掌踩实，靠前脚发力站起","equip":"台阶","desc":"练单腿发力。踩 15–20cm 台阶，全脚掌踩实，靠前脚把身体推上去，两侧轮流。"},{"id":"lat_lunge","name":"侧向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"屈膝侧坐髋，另一腿伸直，脚尖朝前","equip":"自重","desc":"练大腿内侧与侧向稳定。向一侧跨出下蹲，屈膝侧坐髋，另一腿伸直、脚尖朝前。"},{"id":"sl_rdl","name":"扶墙单腿硬拉","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿向后抬起与身体成一线","equip":"自重","desc":"练后链与平衡。一手扶墙，一腿向后抬起与身体成一线，髋往前推再收回。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]}]},"2026-12-05":{"date":"2026-12-05","dow":"周六","dayIndex":27,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"有氧","title":"周末慢跑","items":[{"id":"run3k","name":"慢跑 3 公里","light":"慢跑 2 公里+走 1 公里","std":"慢跑 3 公里","plus":"慢跑 3 公里+最后一公里提速","cue":"能说话的速度，配速不重要，跑姿别塌","equip":"跑鞋","desc":"慢跑 3 公里。能说话的速度，配速不重要，跑姿别塌。"},{"id":"run_core","name":"跑后核心 5 分钟","light":"侧平板+猫牛","std":"核心 C 套餐简化版","plus":"核心 C 全套","cue":"跑完别马上坐下，趁热做","equip":"自重","desc":"跑后核心。跑完别马上坐，趁热做核心 C 简化版。"}]}]},"2026-12-06":{"date":"2026-12-06","dow":"周日","dayIndex":28,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"恢复","title":"主动恢复日","items":[{"id":"zhanzhuang","name":"站桩 / 八段锦","light":"15 分钟","std":"20 分钟","plus":"20 分钟","cue":"全天唯一“必修项”，主动恢复就靠它","equip":"无","desc":"站桩/八段锦：全天唯一必修，主动恢复，放松精神调气息。"},{"id":"outdoor","name":"户外散步或赏绿 20 分钟","light":"20 分钟","std":"30 分钟","plus":"40 分钟","cue":"纯放松不计数步，喘匀气","equip":"无","desc":"户外散步赏绿：纯放松不计数步，喘匀气，看看绿植。"}]}]},"2026-12-07":{"date":"2026-12-07","dow":"周一","dayIndex":1,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"下肢 · 股四头主导","items":[{"id":"sq_box","name":"箱式深蹲","light":"3×8","std":"3×12","plus":"4×12","cue":"轻触椅面即起，膝盖对准第二脚趾","equip":"自重+椅","desc":"练大腿前侧与臀。背挺直，臀轻碰椅面即起、别真坐下；膝盖对准第二脚趾，不内扣。"},{"id":"rev_lunge","name":"扶椅反向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"重心压在前脚脚跟，后膝轻点地","equip":"自重+椅","desc":"练臀腿。手扶椅背站稳，一脚向后迈，前膝弯到约 90°、重心压在前脚脚跟，后膝轻点地即起。"},{"id":"wall_sit","name":"靠墙静蹲","light":"2×20秒","std":"3×25秒","plus":"3×35秒","cue":"大腿与地面 45-60°，不必蹲太深","equip":"自重+墙","desc":"练大腿耐力、保护膝盖。背贴墙下滑到大腿与地面 45–60°，不必蹲太深，腰不离开墙，计时保持。"},{"id":"glute_bridge","name":"双腿臀桥","light":"2×12","std":"3×12","plus":"3×15","cue":"顶点夹臀停 1 秒，腰不要塌","equip":"自重","desc":"练臀与后链。仰卧屈膝，用臀部把骨盆顶起，顶点夹臀停 1 秒，腰不要塌。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"},{"id":"birddog","name":"鸟狗式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆不歪，水杯放背上不倒","equip":"自重","desc":"练核心与背。四点支撑，对侧手腿伸出，骨盆不歪，如背放杯水不倒。"}]},{"slot":"晚上","title":"壶铃 · 髋铰链","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"},{"id":"kb_goblet","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"慢下快起，最后一次保留余力","equip":"壶铃","desc":"练腿臀。慢下快起，最后一次保留余力。"}]}]},"2026-12-08":{"date":"2026-12-08","dow":"周二","dayIndex":2,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"上肢 · 推（胸肩三头）","items":[{"id":"pushup_incline","name":"上斜俯卧撑（手撑稳固台面）","light":"3×8","std":"3×12","plus":"4×12","cue":"下放 3 秒离心，胸贴台面再撑起","equip":"自重+台面","desc":"练胸与手臂。手撑稳固台面（高于地面），下放 3 秒离心，胸贴近台面再撑起。"},{"id":"pushup_decline","name":"脚垫高俯卧撑","light":"2×6","std":"3×8","plus":"3×10","cue":"脚放矮凳，肩保持下压不耸","equip":"自重+矮凳","desc":"练上胸与肩。脚放矮凳，身体前倾，肩保持下压不耸肩。"},{"id":"db_ohp","name":"哑铃肩上推","light":"2×10","std":"3×10","plus":"3×12","cue":"核心收紧，肋骨下沉，别塌腰代偿","equip":"哑铃","desc":"练肩。核心收紧、肋骨下沉，哑铃从肩推到头顶，别塌腰代偿。"},{"id":"db_floor_press","name":"地板哑铃卧推","light":"2×10","std":"3×10","plus":"3×12","cue":"肘落到地面停顿，节奏稳","equip":"哑铃","desc":"练胸。躺地，肘落到地面停顿，节奏稳，用胸发力推起。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"},{"id":"birddog","name":"鸟狗式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆不歪，水杯放背上不倒","equip":"自重","desc":"练核心与背。四点支撑，对侧手腿伸出，骨盆不歪，如背放杯水不倒。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk20","name":"低强度有氧 20 分钟","light":"15 分钟","std":"20 分钟","plus":"25 分钟","cue":"快走/椭圆/骑车，能边做边说话的强度","equip":"无","desc":"快走/椭圆/骑车，能边做边说话的强度，不出大汗。"},{"id":"breathe","name":"训练后放松呼吸 3 分钟","light":"3 分钟","std":"3 分钟","plus":"5 分钟","cue":"鼻吸口呼，6 秒一次，帮助心率回落","equip":"无","desc":"训练后放松。鼻吸口呼，6 秒一次，帮助心率回落。"}]}]},"2026-12-09":{"date":"2026-12-09","dow":"周三","dayIndex":3,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"下肢 · 髋与后链","items":[{"id":"rdl_db","name":"哑铃罗马尼亚硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"髋往后推，全程腰背平直","equip":"哑铃","desc":"练臀与大腿后侧。哑铃贴腿，髋往后推、屁股向后坐，腰背始终平直，感到大腿后侧拉伸再起身。"},{"id":"goblet_sq","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"壶铃贴胸，肘向下夹，蹲到大腿平行","equip":"壶铃","desc":"练腿臀整体。壶铃抱胸前、肘向下夹，蹲到大腿接近平行，膝盖跟脚尖同向。"},{"id":"sl_bridge","name":"单腿臀桥","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆保持水平，别塌向一侧","equip":"自重","desc":"练单侧臀。一腿抬起，只用一条腿把骨盆顶起，骨盆保持水平，别塌向一侧。"},{"id":"bul_split","name":"扶椅保加利亚分腿蹲","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后脚搭椅，前膝缓慢下放 3 秒","equip":"自重+椅","desc":"练单腿力量。后脚搭椅，前膝缓慢下放 3 秒，前脚脚跟发力站起。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"晚上","title":"放松与呼吸","items":[{"id":"walk_easy","name":"傍晚放松步行 10 分钟","light":"10 分钟","std":"10 分钟","plus":"15 分钟","cue":"不计入训练，纯粹松一松","equip":"无","desc":"傍晚放松步行：不计入训练，纯粹松一松，慢走 10–15 分钟。"}]}]},"2026-12-10":{"date":"2026-12-10","dow":"周四","dayIndex":4,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"上肢 · 拉（背與二头）","items":[{"id":"db_row","name":"哑铃单臂划船","light":"2×10/侧","std":"3×10/侧","plus":"3×12/侧","cue":"肘贴身向后，想象拉口袋拉链","equip":"哑铃","desc":"练背。一手撑凳一腿跪，肘贴身向后拉，想象拉口袋拉链。"},{"id":"kb_row","name":"壶铃俯身划船","light":"2×10","std":"3×12","plus":"3×14","cue":"背平直，用背发力不是手拽","equip":"壶铃","desc":"练背。背平直，用背发力把壶铃拉向腰侧，不是用手拽。"},{"id":"inverted_row","name":"桌下反向划船","light":"2×6","std":"3×8","plus":"3×10","cue":"身体绷成一条直线，胸找桌沿","equip":"桌/弹力带","desc":"练背。仰卧桌下，身体绷直，胸去找桌沿，脚可屈膝降难度。"},{"id":"face_pull","name":"俯身 Y-T-W","light":"2×8","std":"2×10","plus":"3×10","cue":"纠正圆肩，慢，别甩","equip":"自重/小哑铃","desc":"练肩后束与姿态。俯身，手臂做 Y、T、W 慢动作，纠正圆肩，别甩。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk25","name":"低强度有氧 25 分钟","light":"18 分钟","std":"25 分钟","plus":"30 分钟","cue":"微汗即可，不要追心率，心脏 Zone2","equip":"无","desc":"低强度有氧。微汗即可，不追心率，保持在能说话的区间。"},{"id":"stretch","name":"下肢拉伸 5 分钟","light":"5 分钟","std":"5 分钟","plus":"8 分钟","cue":"髋屈肌+股四头+小腿，静态不弹振","equip":"无","desc":"下肢拉伸：髋屈肌+股四头+小腿，静态不弹振，每个保持 20–30 秒。"}]},{"slot":"晚上","title":"壶铃 · 上肢与稳定","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"},{"id":"kb_goblet","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"慢下快起，最后一次保留余力","equip":"壶铃","desc":"练腿臀。慢下快起，最后一次保留余力。"}]}]},"2026-12-11":{"date":"2026-12-11","dow":"周五","dayIndex":5,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"早上","title":"下肢 · 单腿与侧向","items":[{"id":"step_up","name":"登阶（15-20cm）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"全脚掌踩实，靠前脚发力站起","equip":"台阶","desc":"练单腿发力。踩 15–20cm 台阶，全脚掌踩实，靠前脚把身体推上去，两侧轮流。"},{"id":"lat_lunge","name":"侧向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"屈膝侧坐髋，另一腿伸直，脚尖朝前","equip":"自重","desc":"练大腿内侧与侧向稳定。向一侧跨出下蹲，屈膝侧坐髋，另一腿伸直、脚尖朝前。"},{"id":"sl_rdl","name":"扶墙单腿硬拉","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿向后抬起与身体成一线","equip":"自重","desc":"练后链与平衡。一手扶墙，一腿向后抬起与身体成一线，髋往前推再收回。"},{"id":"clamshell","name":"蚌式开合","light":"2×12/侧","std":"3×15/侧","plus":"3×20/侧","cue":"骨盆不后倒，只用臀部发力","equip":"弹力带","desc":"练臀中肌。侧躺，骨盆不后倒，膝盖像贝壳一样打开再合拢，只用臀部发力。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]}]},"2026-12-12":{"date":"2026-12-12","dow":"周六","dayIndex":6,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"有氧","title":"周末慢跑","items":[{"id":"run3k","name":"慢跑 3 公里","light":"慢跑 2 公里+走 1 公里","std":"慢跑 3 公里","plus":"慢跑 3 公里+最后一公里提速","cue":"能说话的速度，配速不重要，跑姿别塌","equip":"跑鞋","desc":"慢跑 3 公里。能说话的速度，配速不重要，跑姿别塌。"},{"id":"run_core","name":"跑后核心 5 分钟","light":"侧平板+猫牛","std":"核心 C 套餐简化版","plus":"核心 C 全套","cue":"跑完别马上坐下，趁热做","equip":"自重","desc":"跑后核心。跑完别马上坐，趁热做核心 C 简化版。"}]}]},"2026-12-13":{"date":"2026-12-13","dow":"周日","dayIndex":7,"week":1,"phase":"第 1 周 · 建立期","deload":false,"hint":"先建立动作质量，重量与次数都不追快","slots":[{"slot":"恢复","title":"主动恢复日","items":[{"id":"zhanzhuang","name":"站桩 / 八段锦","light":"15 分钟","std":"20 分钟","plus":"20 分钟","cue":"全天唯一“必修项”，主动恢复就靠它","equip":"无","desc":"站桩/八段锦：全天唯一必修，主动恢复，放松精神调气息。"},{"id":"outdoor","name":"户外散步或赏绿 20 分钟","light":"20 分钟","std":"30 分钟","plus":"40 分钟","cue":"纯放松不计数步，喘匀气","equip":"无","desc":"户外散步赏绿：纯放松不计数步，喘匀气，看看绿植。"}]}]},"2026-12-14":{"date":"2026-12-14","dow":"周一","dayIndex":8,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"下肢 · 功能力量","items":[{"id":"goblet_box_sq","name":"壶铃箱式深蹲","light":"3×8","std":"3×10","plus":"4×10","cue":"坐到箱面即起，控制节奏","equip":"壶铃","desc":"练腿臀。坐到箱面即起，控制节奏，不弹震。"},{"id":"hip_thrust","name":"肩胛靠凳臀推","light":"2×10","std":"3×12","plus":"3×15","cue":"顶点骨盆后倾，别用腰顶","equip":"哑铃/壶铃","desc":"练臀。上背靠凳，壶铃放髋，顶起时骨盆后倾夹臀，别用腰顶。"},{"id":"cur_lunge","name":"后撤交叉弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿斜向后撤，前膝不超过脚尖过多","equip":"自重","desc":"练腿臀与协调。后腿斜向后撤交叉，前膝不超过脚尖过多，控制下放。"},{"id":"sit_to_stand","name":"坐立转换（STS）","light":"2×10","std":"3×12","plus":"3×15","cue":"生活最实用的腿部力量，不许用手撑","equip":"椅子","desc":"练生活最实用的腿部力量。从椅子站起再坐下，不许用手撑，慢起慢落。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]},{"slot":"晚上","title":"壶铃 · 髋铰链","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"},{"id":"kb_goblet","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"慢下快起，最后一次保留余力","equip":"壶铃","desc":"练腿臀。慢下快起，最后一次保留余力。"}]}]},"2026-12-15":{"date":"2026-12-15","dow":"周二","dayIndex":9,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"上肢 · 肩与手臂稳定","items":[{"id":"pushup_diamond","name":"窄距（钻石）俯卧撑","light":"2×6","std":"3×8","plus":"3×10","cue":"双手成菱形，肘向后夹","equip":"自重","desc":"练三头与胸内侧。双手成菱形（拇指食指相触），肘向后夹。"},{"id":"pushup_ecc","name":"慢速离心俯卧撑","light":"3×5","std":"3×6","plus":"3×8","cue":"下放 5 秒，撑不起来就上斜","equip":"自重","desc":"练胸臂力量。下放 5 秒慢放，撑不起来就退回上斜版。"},{"id":"lat_raise","name":"哑铃侧平举","light":"2×10","std":"3×12","plus":"3×15","cue":"抬到肩高即可，别耸肩甩 weight","equip":"哑铃","desc":"练肩中束。抬到肩高即可，别耸肩、别甩重量，慢起慢落。"},{"id":"tricep_ext","name":"哑铃过头臂屈伸","light":"2×10","std":"3×10","plus":"3×12","cue":"大臂贴近耳朵，肘不往外开","equip":"哑铃","desc":"练三头。大臂贴耳，小臂向后放下再伸直，肘不往外开。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk20","name":"低强度有氧 20 分钟","light":"15 分钟","std":"20 分钟","plus":"25 分钟","cue":"快走/椭圆/骑车，能边做边说话的强度","equip":"无","desc":"快走/椭圆/骑车，能边做边说话的强度，不出大汗。"},{"id":"breathe","name":"训练后放松呼吸 3 分钟","light":"3 分钟","std":"3 分钟","plus":"5 分钟","cue":"鼻吸口呼，6 秒一次，帮助心率回落","equip":"无","desc":"训练后放松。鼻吸口呼，6 秒一次，帮助心率回落。"}]}]},"2026-12-16":{"date":"2026-12-16","dow":"周三","dayIndex":10,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"下肢 · 股四头主导","items":[{"id":"sq_box","name":"箱式深蹲","light":"3×8","std":"3×12","plus":"4×12","cue":"轻触椅面即起，膝盖对准第二脚趾","equip":"自重+椅","desc":"练大腿前侧与臀。背挺直，臀轻碰椅面即起、别真坐下；膝盖对准第二脚趾，不内扣。"},{"id":"rev_lunge","name":"扶椅反向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"重心压在前脚脚跟，后膝轻点地","equip":"自重+椅","desc":"练臀腿。手扶椅背站稳，一脚向后迈，前膝弯到约 90°、重心压在前脚脚跟，后膝轻点地即起。"},{"id":"wall_sit","name":"靠墙静蹲","light":"2×20秒","std":"3×25秒","plus":"3×35秒","cue":"大腿与地面 45-60°，不必蹲太深","equip":"自重+墙","desc":"练大腿耐力、保护膝盖。背贴墙下滑到大腿与地面 45–60°，不必蹲太深，腰不离开墙，计时保持。"},{"id":"glute_bridge","name":"双腿臀桥","light":"2×12","std":"3×12","plus":"3×15","cue":"顶点夹臀停 1 秒，腰不要塌","equip":"自重","desc":"练臀与后链。仰卧屈膝，用臀部把骨盆顶起，顶点夹臀停 1 秒，腰不要塌。"}]},{"slot":"早上","title":"核心 D 组","items":[{"id":"step_touch","name":"仰卧交替点脚跟","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"骨盆不动，只有腿动","equip":"自重","desc":"练下腹。仰卧，骨盆不动，交替点脚跟，只有腿动。"},{"id":"birddog2","name":"鸟狗式（离心慢放）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"伸展停 2 秒再收回","equip":"自重","desc":"练核心稳定。伸展后停 2 秒再收回。"}]},{"slot":"晚上","title":"放松与呼吸","items":[{"id":"walk_easy","name":"傍晚放松步行 10 分钟","light":"10 分钟","std":"10 分钟","plus":"15 分钟","cue":"不计入训练，纯粹松一松","equip":"无","desc":"傍晚放松步行：不计入训练，纯粹松一松，慢走 10–15 分钟。"}]}]},"2026-12-17":{"date":"2026-12-17","dow":"周四","dayIndex":11,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"上肢 · 推拉综合","items":[{"id":"pushup_std","name":"标准俯卧撑（重质不重量）","light":"3×8","std":"3×10","plus":"3×12","cue":"身体成一条直线，每一下都做到位","equip":"自重","desc":"练胸臂整体。身体成一条直线，每一下都做到位，不塌腰不撅臀。"},{"id":"db_alt_press","name":"哑铃交替卧推","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"交替时用核心抗旋转","equip":"哑铃","desc":"练胸与核心抗旋转。躺地交替推，用核心稳住身体不晃。"},{"id":"bent_row","name":"俯身哑铃划船","light":"2×10","std":"3×12","plus":"3×14","cue":"髋铰链姿势，起身时用腿不用腰","equip":"哑铃","desc":"练背。髋铰链姿势，拉起用背，起身时用腿不用腰。"},{"id":"band_pulldown","name":"弹力带下拉","light":"2×12","std":"3×15","plus":"3×18","cue":"下拉到锁骨，慢放回","equip":"弹力带","desc":"练背与肩。双手拉弹力带到锁骨，慢放回，感受背部收缩。"}]},{"slot":"早上","title":"核心 D 组","items":[{"id":"step_touch","name":"仰卧交替点脚跟","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"骨盆不动，只有腿动","equip":"自重","desc":"练下腹。仰卧，骨盆不动，交替点脚跟，只有腿动。"},{"id":"birddog2","name":"鸟狗式（离心慢放）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"伸展停 2 秒再收回","equip":"自重","desc":"练核心稳定。伸展后停 2 秒再收回。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk25","name":"低强度有氧 25 分钟","light":"18 分钟","std":"25 分钟","plus":"30 分钟","cue":"微汗即可，不要追心率，心脏 Zone2","equip":"无","desc":"低强度有氧。微汗即可，不追心率，保持在能说话的区间。"},{"id":"stretch","name":"下肢拉伸 5 分钟","light":"5 分钟","std":"5 分钟","plus":"8 分钟","cue":"髋屈肌+股四头+小腿，静态不弹振","equip":"无","desc":"下肢拉伸：髋屈肌+股四头+小腿，静态不弹振，每个保持 20–30 秒。"}]},{"slot":"晚上","title":"壶铃 · 上肢与稳定","items":[{"id":"kb_one_row","name":"单臂壶铃划船","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"另一手撑凳，背平直","equip":"壶铃","desc":"练背。一手撑凳，另一手划壶铃，背平直。"},{"id":"kb_overhead","name":"壶铃单臂过头走","light":"2×20秒/侧","std":"3×25秒/侧","plus":"3×30秒/侧","cue":"手臂锁死，眼睛平视，练肩稳定","equip":"壶铃（轻）","desc":"练肩稳定。手臂锁死，眼睛平视，壶铃轻。"},{"id":"kb_getup","name":"土耳其起立半程（至肘撑）","light":"2×4/侧","std":"3×5/侧","plus":"3×6/侧","cue":"慢，眼睛盯住壶铃，不确定就跳过","equip":"壶铃（轻）","desc":"练全身稳定。慢，眼睛盯住壶铃，不确定就跳过。"}]}]},"2026-12-18":{"date":"2026-12-18","dow":"周五","dayIndex":12,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"早上","title":"下肢 · 髋与后链","items":[{"id":"rdl_db","name":"哑铃罗马尼亚硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"髋往后推，全程腰背平直","equip":"哑铃","desc":"练臀与大腿后侧。哑铃贴腿，髋往后推、屁股向后坐，腰背始终平直，感到大腿后侧拉伸再起身。"},{"id":"goblet_sq","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"壶铃贴胸，肘向下夹，蹲到大腿平行","equip":"壶铃","desc":"练腿臀整体。壶铃抱胸前、肘向下夹，蹲到大腿接近平行，膝盖跟脚尖同向。"},{"id":"sl_bridge","name":"单腿臀桥","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆保持水平，别塌向一侧","equip":"自重","desc":"练单侧臀。一腿抬起，只用一条腿把骨盆顶起，骨盆保持水平，别塌向一侧。"},{"id":"bul_split","name":"扶椅保加利亚分腿蹲","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后脚搭椅，前膝缓慢下放 3 秒","equip":"自重+椅","desc":"练单腿力量。后脚搭椅，前膝缓慢下放 3 秒，前脚脚跟发力站起。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"},{"id":"birddog","name":"鸟狗式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆不歪，水杯放背上不倒","equip":"自重","desc":"练核心与背。四点支撑，对侧手腿伸出，骨盆不歪，如背放杯水不倒。"}]}]},"2026-12-19":{"date":"2026-12-19","dow":"周六","dayIndex":13,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"有氧","title":"周末慢跑","items":[{"id":"run3k","name":"慢跑 3 公里","light":"慢跑 2 公里+走 1 公里","std":"慢跑 3 公里","plus":"慢跑 3 公里+最后一公里提速","cue":"能说话的速度，配速不重要，跑姿别塌","equip":"跑鞋","desc":"慢跑 3 公里。能说话的速度，配速不重要，跑姿别塌。"},{"id":"run_core","name":"跑后核心 5 分钟","light":"侧平板+猫牛","std":"核心 C 套餐简化版","plus":"核心 C 全套","cue":"跑完别马上坐下，趁热做","equip":"自重","desc":"跑后核心。跑完别马上坐，趁热做核心 C 简化版。"}]}]},"2026-12-20":{"date":"2026-12-20","dow":"周日","dayIndex":14,"week":2,"phase":"第 2 周 · 负荷期","deload":false,"hint":"动作升级，组数到位，感受腿部发力","slots":[{"slot":"恢复","title":"主动恢复日","items":[{"id":"zhanzhuang","name":"站桩 / 八段锦","light":"15 分钟","std":"20 分钟","plus":"20 分钟","cue":"全天唯一“必修项”，主动恢复就靠它","equip":"无","desc":"站桩/八段锦：全天唯一必修，主动恢复，放松精神调气息。"},{"id":"outdoor","name":"户外散步或赏绿 20 分钟","light":"20 分钟","std":"30 分钟","plus":"40 分钟","cue":"纯放松不计数步，喘匀气","equip":"无","desc":"户外散步赏绿：纯放松不计数步，喘匀气，看看绿植。"}]}]},"2026-12-21":{"date":"2026-12-21","dow":"周一","dayIndex":15,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"下肢 · 髋与后链","items":[{"id":"rdl_db","name":"哑铃罗马尼亚硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"髋往后推，全程腰背平直","equip":"哑铃","desc":"练臀与大腿后侧。哑铃贴腿，髋往后推、屁股向后坐，腰背始终平直，感到大腿后侧拉伸再起身。"},{"id":"goblet_sq","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"壶铃贴胸，肘向下夹，蹲到大腿平行","equip":"壶铃","desc":"练腿臀整体。壶铃抱胸前、肘向下夹，蹲到大腿接近平行，膝盖跟脚尖同向。"},{"id":"sl_bridge","name":"单腿臀桥","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆保持水平，别塌向一侧","equip":"自重","desc":"练单侧臀。一腿抬起，只用一条腿把骨盆顶起，骨盆保持水平，别塌向一侧。"},{"id":"bul_split","name":"扶椅保加利亚分腿蹲","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后脚搭椅，前膝缓慢下放 3 秒","equip":"自重+椅","desc":"练单腿力量。后脚搭椅，前膝缓慢下放 3 秒，前脚脚跟发力站起。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"晚上","title":"壶铃 · 髋铰链","items":[{"id":"kb_one_row","name":"单臂壶铃划船","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"另一手撑凳，背平直","equip":"壶铃","desc":"练背。一手撑凳，另一手划壶铃，背平直。"},{"id":"kb_overhead","name":"壶铃单臂过头走","light":"2×20秒/侧","std":"3×25秒/侧","plus":"3×30秒/侧","cue":"手臂锁死，眼睛平视，练肩稳定","equip":"壶铃（轻）","desc":"练肩稳定。手臂锁死，眼睛平视，壶铃轻。"},{"id":"kb_getup","name":"土耳其起立半程（至肘撑）","light":"2×4/侧","std":"3×5/侧","plus":"3×6/侧","cue":"慢，眼睛盯住壶铃，不确定就跳过","equip":"壶铃（轻）","desc":"练全身稳定。慢，眼睛盯住壶铃，不确定就跳过。"}]}]},"2026-12-22":{"date":"2026-12-22","dow":"周二","dayIndex":16,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"上肢 · 拉（背與二头）","items":[{"id":"db_row","name":"哑铃单臂划船","light":"2×10/侧","std":"3×10/侧","plus":"3×12/侧","cue":"肘贴身向后，想象拉口袋拉链","equip":"哑铃","desc":"练背。一手撑凳一腿跪，肘贴身向后拉，想象拉口袋拉链。"},{"id":"kb_row","name":"壶铃俯身划船","light":"2×10","std":"3×12","plus":"3×14","cue":"背平直，用背发力不是手拽","equip":"壶铃","desc":"练背。背平直，用背发力把壶铃拉向腰侧，不是用手拽。"},{"id":"inverted_row","name":"桌下反向划船","light":"2×6","std":"3×8","plus":"3×10","cue":"身体绷成一条直线，胸找桌沿","equip":"桌/弹力带","desc":"练背。仰卧桌下，身体绷直，胸去找桌沿，脚可屈膝降难度。"},{"id":"face_pull","name":"俯身 Y-T-W","light":"2×8","std":"2×10","plus":"3×10","cue":"纠正圆肩，慢，别甩","equip":"自重/小哑铃","desc":"练肩后束与姿态。俯身，手臂做 Y、T、W 慢动作，纠正圆肩，别甩。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk20","name":"低强度有氧 20 分钟","light":"15 分钟","std":"20 分钟","plus":"25 分钟","cue":"快走/椭圆/骑车，能边做边说话的强度","equip":"无","desc":"快走/椭圆/骑车，能边做边说话的强度，不出大汗。"},{"id":"breathe","name":"训练后放松呼吸 3 分钟","light":"3 分钟","std":"3 分钟","plus":"5 分钟","cue":"鼻吸口呼，6 秒一次，帮助心率回落","equip":"无","desc":"训练后放松。鼻吸口呼，6 秒一次，帮助心率回落。"}]}]},"2026-12-23":{"date":"2026-12-23","dow":"周三","dayIndex":17,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"下肢 · 单腿与侧向","items":[{"id":"step_up","name":"登阶（15-20cm）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"全脚掌踩实，靠前脚发力站起","equip":"台阶","desc":"练单腿发力。踩 15–20cm 台阶，全脚掌踩实，靠前脚把身体推上去，两侧轮流。"},{"id":"lat_lunge","name":"侧向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"屈膝侧坐髋，另一腿伸直，脚尖朝前","equip":"自重","desc":"练大腿内侧与侧向稳定。向一侧跨出下蹲，屈膝侧坐髋，另一腿伸直、脚尖朝前。"},{"id":"sl_rdl","name":"扶墙单腿硬拉","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿向后抬起与身体成一线","equip":"自重","desc":"练后链与平衡。一手扶墙，一腿向后抬起与身体成一线，髋往前推再收回。"},{"id":"clamshell","name":"蚌式开合","light":"2×12/侧","std":"3×15/侧","plus":"3×20/侧","cue":"骨盆不后倒，只用臀部发力","equip":"弹力带","desc":"练臀中肌。侧躺，骨盆不后倒，膝盖像贝壳一样打开再合拢，只用臀部发力。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]},{"slot":"晚上","title":"放松与呼吸","items":[{"id":"walk_easy","name":"傍晚放松步行 10 分钟","light":"10 分钟","std":"10 分钟","plus":"15 分钟","cue":"不计入训练，纯粹松一松","equip":"无","desc":"傍晚放松步行：不计入训练，纯粹松一松，慢走 10–15 分钟。"}]}]},"2026-12-24":{"date":"2026-12-24","dow":"周四","dayIndex":18,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"上肢 · 推（胸肩三头）","items":[{"id":"pushup_incline","name":"上斜俯卧撑（手撑稳固台面）","light":"3×8","std":"3×12","plus":"4×12","cue":"下放 3 秒离心，胸贴台面再撑起","equip":"自重+台面","desc":"练胸与手臂。手撑稳固台面（高于地面），下放 3 秒离心，胸贴近台面再撑起。"},{"id":"pushup_decline","name":"脚垫高俯卧撑","light":"2×6","std":"3×8","plus":"3×10","cue":"脚放矮凳，肩保持下压不耸","equip":"自重+矮凳","desc":"练上胸与肩。脚放矮凳，身体前倾，肩保持下压不耸肩。"},{"id":"db_ohp","name":"哑铃肩上推","light":"2×10","std":"3×10","plus":"3×12","cue":"核心收紧，肋骨下沉，别塌腰代偿","equip":"哑铃","desc":"练肩。核心收紧、肋骨下沉，哑铃从肩推到头顶，别塌腰代偿。"},{"id":"db_floor_press","name":"地板哑铃卧推","light":"2×10","std":"3×10","plus":"3×12","cue":"肘落到地面停顿，节奏稳","equip":"哑铃","desc":"练胸。躺地，肘落到地面停顿，节奏稳，用胸发力推起。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk25","name":"低强度有氧 25 分钟","light":"18 分钟","std":"25 分钟","plus":"30 分钟","cue":"微汗即可，不要追心率，心脏 Zone2","equip":"无","desc":"低强度有氧。微汗即可，不追心率，保持在能说话的区间。"},{"id":"stretch","name":"下肢拉伸 5 分钟","light":"5 分钟","std":"5 分钟","plus":"8 分钟","cue":"髋屈肌+股四头+小腿，静态不弹振","equip":"无","desc":"下肢拉伸：髋屈肌+股四头+小腿，静态不弹振，每个保持 20–30 秒。"}]},{"slot":"晚上","title":"壶铃 · 上肢与稳定","items":[{"id":"kb_one_row","name":"单臂壶铃划船","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"另一手撑凳，背平直","equip":"壶铃","desc":"练背。一手撑凳，另一手划壶铃，背平直。"},{"id":"kb_overhead","name":"壶铃单臂过头走","light":"2×20秒/侧","std":"3×25秒/侧","plus":"3×30秒/侧","cue":"手臂锁死，眼睛平视，练肩稳定","equip":"壶铃（轻）","desc":"练肩稳定。手臂锁死，眼睛平视，壶铃轻。"},{"id":"kb_getup","name":"土耳其起立半程（至肘撑）","light":"2×4/侧","std":"3×5/侧","plus":"3×6/侧","cue":"慢，眼睛盯住壶铃，不确定就跳过","equip":"壶铃（轻）","desc":"练全身稳定。慢，眼睛盯住壶铃，不确定就跳过。"}]}]},"2026-12-25":{"date":"2026-12-25","dow":"周五","dayIndex":19,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"早上","title":"下肢 · 功能力量","items":[{"id":"goblet_box_sq","name":"壶铃箱式深蹲","light":"3×8","std":"3×10","plus":"4×10","cue":"坐到箱面即起，控制节奏","equip":"壶铃","desc":"练腿臀。坐到箱面即起，控制节奏，不弹震。"},{"id":"hip_thrust","name":"肩胛靠凳臀推","light":"2×10","std":"3×12","plus":"3×15","cue":"顶点骨盆后倾，别用腰顶","equip":"哑铃/壶铃","desc":"练臀。上背靠凳，壶铃放髋，顶起时骨盆后倾夹臀，别用腰顶。"},{"id":"cur_lunge","name":"后撤交叉弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿斜向后撤，前膝不超过脚尖过多","equip":"自重","desc":"练腿臀与协调。后腿斜向后撤交叉，前膝不超过脚尖过多，控制下放。"},{"id":"sit_to_stand","name":"坐立转换（STS）","light":"2×10","std":"3×12","plus":"3×15","cue":"生活最实用的腿部力量，不许用手撑","equip":"椅子","desc":"练生活最实用的腿部力量。从椅子站起再坐下，不许用手撑，慢起慢落。"}]},{"slot":"早上","title":"核心 D 组","items":[{"id":"step_touch","name":"仰卧交替点脚跟","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"骨盆不动，只有腿动","equip":"自重","desc":"练下腹。仰卧，骨盆不动，交替点脚跟，只有腿动。"},{"id":"birddog2","name":"鸟狗式（离心慢放）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"伸展停 2 秒再收回","equip":"自重","desc":"练核心稳定。伸展后停 2 秒再收回。"}]}]},"2026-12-26":{"date":"2026-12-26","dow":"周六","dayIndex":20,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"有氧","title":"周末慢跑","items":[{"id":"run3k","name":"慢跑 3 公里","light":"慢跑 2 公里+走 1 公里","std":"慢跑 3 公里","plus":"慢跑 3 公里+最后一公里提速","cue":"能说话的速度，配速不重要，跑姿别塌","equip":"跑鞋","desc":"慢跑 3 公里。能说话的速度，配速不重要，跑姿别塌。"},{"id":"run_core","name":"跑后核心 5 分钟","light":"侧平板+猫牛","std":"核心 C 套餐简化版","plus":"核心 C 全套","cue":"跑完别马上坐下，趁热做","equip":"自重","desc":"跑后核心。跑完别马上坐，趁热做核心 C 简化版。"}]}]},"2026-12-27":{"date":"2026-12-27","dow":"周日","dayIndex":21,"week":3,"phase":"第 3 周 · 强化期","deload":false,"hint":"本周感受最强，注意睡够、别暴汗","slots":[{"slot":"恢复","title":"主动恢复日","items":[{"id":"zhanzhuang","name":"站桩 / 八段锦","light":"15 分钟","std":"20 分钟","plus":"20 分钟","cue":"全天唯一“必修项”，主动恢复就靠它","equip":"无","desc":"站桩/八段锦：全天唯一必修，主动恢复，放松精神调气息。"},{"id":"outdoor","name":"户外散步或赏绿 20 分钟","light":"20 分钟","std":"30 分钟","plus":"40 分钟","cue":"纯放松不计数步，喘匀气","equip":"无","desc":"户外散步赏绿：纯放松不计数步，喘匀气，看看绿植。"}]}]},"2026-12-28":{"date":"2026-12-28","dow":"周一","dayIndex":22,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"下肢 · 股四头主导","items":[{"id":"sq_box","name":"箱式深蹲","light":"3×8","std":"3×12","plus":"4×12","cue":"轻触椅面即起，膝盖对准第二脚趾","equip":"自重+椅","desc":"练大腿前侧与臀。背挺直，臀轻碰椅面即起、别真坐下；膝盖对准第二脚趾，不内扣。"},{"id":"rev_lunge","name":"扶椅反向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"重心压在前脚脚跟，后膝轻点地","equip":"自重+椅","desc":"练臀腿。手扶椅背站稳，一脚向后迈，前膝弯到约 90°、重心压在前脚脚跟，后膝轻点地即起。"},{"id":"wall_sit","name":"靠墙静蹲","light":"2×20秒","std":"3×25秒","plus":"3×35秒","cue":"大腿与地面 45-60°，不必蹲太深","equip":"自重+墙","desc":"练大腿耐力、保护膝盖。背贴墙下滑到大腿与地面 45–60°，不必蹲太深，腰不离开墙，计时保持。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"},{"id":"birddog","name":"鸟狗式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆不歪，水杯放背上不倒","equip":"自重","desc":"练核心与背。四点支撑，对侧手腿伸出，骨盆不歪，如背放杯水不倒。"}]},{"slot":"晚上","title":"壶铃 · 髋铰链","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"}]}]},"2026-12-29":{"date":"2026-12-29","dow":"周二","dayIndex":23,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"上肢 · 推（胸肩三头）","items":[{"id":"pushup_incline","name":"上斜俯卧撑（手撑稳固台面）","light":"3×8","std":"3×12","plus":"4×12","cue":"下放 3 秒离心，胸贴台面再撑起","equip":"自重+台面","desc":"练胸与手臂。手撑稳固台面（高于地面），下放 3 秒离心，胸贴近台面再撑起。"},{"id":"pushup_decline","name":"脚垫高俯卧撑","light":"2×6","std":"3×8","plus":"3×10","cue":"脚放矮凳，肩保持下压不耸","equip":"自重+矮凳","desc":"练上胸与肩。脚放矮凳，身体前倾，肩保持下压不耸肩。"},{"id":"db_ohp","name":"哑铃肩上推","light":"2×10","std":"3×10","plus":"3×12","cue":"核心收紧，肋骨下沉，别塌腰代偿","equip":"哑铃","desc":"练肩。核心收紧、肋骨下沉，哑铃从肩推到头顶，别塌腰代偿。"}]},{"slot":"早上","title":"核心 A 组","items":[{"id":"deadbug","name":"死虫式","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"腰始终压地，手脚缓慢伸展","equip":"自重","desc":"练深层核心。仰卧，腰始终压地，手脚缓慢伸展再收回，对侧手脚交替。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk20","name":"低强度有氧 20 分钟","light":"15 分钟","std":"20 分钟","plus":"25 分钟","cue":"快走/椭圆/骑车，能边做边说话的强度","equip":"无","desc":"快走/椭圆/骑车，能边做边说话的强度，不出大汗。"}]}]},"2026-12-30":{"date":"2026-12-30","dow":"周三","dayIndex":24,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"下肢 · 髋与后链","items":[{"id":"rdl_db","name":"哑铃罗马尼亚硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"髋往后推，全程腰背平直","equip":"哑铃","desc":"练臀与大腿后侧。哑铃贴腿，髋往后推、屁股向后坐，腰背始终平直，感到大腿后侧拉伸再起身。"},{"id":"goblet_sq","name":"壶铃高脚杯深蹲","light":"2×8","std":"3×10","plus":"3×12","cue":"壶铃贴胸，肘向下夹，蹲到大腿平行","equip":"壶铃","desc":"练腿臀整体。壶铃抱胸前、肘向下夹，蹲到大腿接近平行，膝盖跟脚尖同向。"},{"id":"sl_bridge","name":"单腿臀桥","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"骨盆保持水平，别塌向一侧","equip":"自重","desc":"练单侧臀。一腿抬起，只用一条腿把骨盆顶起，骨盆保持水平，别塌向一侧。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"},{"id":"hip_lift","name":"仰卧骨盆后倾抬臀","light":"2×10","std":"3×12","plus":"3×15","cue":"小幅卷起，练深层核心","equip":"自重","desc":"练深层核心。仰卧小幅卷起骨盆，练腹横肌。"}]},{"slot":"晚上","title":"放松与呼吸","items":[{"id":"walk_easy","name":"傍晚放松步行 10 分钟","light":"10 分钟","std":"10 分钟","plus":"15 分钟","cue":"不计入训练，纯粹松一松","equip":"无","desc":"傍晚放松步行：不计入训练，纯粹松一松，慢走 10–15 分钟。"}]}]},"2026-12-31":{"date":"2026-12-31","dow":"周四","dayIndex":25,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"上肢 · 拉（背與二头）","items":[{"id":"db_row","name":"哑铃单臂划船","light":"2×10/侧","std":"3×10/侧","plus":"3×12/侧","cue":"肘贴身向后，想象拉口袋拉链","equip":"哑铃","desc":"练背。一手撑凳一腿跪，肘贴身向后拉，想象拉口袋拉链。"},{"id":"kb_row","name":"壶铃俯身划船","light":"2×10","std":"3×12","plus":"3×14","cue":"背平直，用背发力不是手拽","equip":"壶铃","desc":"练背。背平直，用背发力把壶铃拉向腰侧，不是用手拽。"},{"id":"inverted_row","name":"桌下反向划船","light":"2×6","std":"3×8","plus":"3×10","cue":"身体绷成一条直线，胸找桌沿","equip":"桌/弹力带","desc":"练背。仰卧桌下，身体绷直，胸去找桌沿，脚可屈膝降难度。"}]},{"slot":"早上","title":"核心 B 组","items":[{"id":"side_plank","name":"侧平板（可屈膝）","light":"2×10秒/侧","std":"3×15秒/侧","plus":"3×20秒/侧","cue":"肩膀正对手肘，髋向上顶","equip":"自重","desc":"练侧腹。肩膀正对手肘，髋向上顶，可屈膝降难度。"}]},{"slot":"有氧","title":"低强度有氧","items":[{"id":"walk25","name":"低强度有氧 25 分钟","light":"18 分钟","std":"25 分钟","plus":"30 分钟","cue":"微汗即可，不要追心率，心脏 Zone2","equip":"无","desc":"低强度有氧。微汗即可，不追心率，保持在能说话的区间。"}]},{"slot":"晚上","title":"壶铃 · 上肢与稳定","items":[{"id":"kb_deadlift","name":"壶铃硬拉","light":"2×10","std":"3×10","plus":"3×12","cue":"像关门一样用臀夹紧起身","equip":"壶铃","desc":"练臀与后链。像关门一样用臀夹紧起身，壶铃贴腿。"},{"id":"kb_swing","name":"壶铃摇摆（髋驱动）","light":"3×10","std":"3×12","plus":"4×12","cue":"不是蹲，是髋前后推，甩到胸高即可","equip":"壶铃","desc":"练髋爆发。不是蹲，是髋前后推，壶铃甩到胸高即可，靠髋不是手。"}]}]},"2027-01-01":{"date":"2027-01-01","dow":"周五","dayIndex":26,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"早上","title":"下肢 · 单腿与侧向","items":[{"id":"step_up","name":"登阶（15-20cm）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"全脚掌踩实，靠前脚发力站起","equip":"台阶","desc":"练单腿发力。踩 15–20cm 台阶，全脚掌踩实，靠前脚把身体推上去，两侧轮流。"},{"id":"lat_lunge","name":"侧向弓步","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"屈膝侧坐髋，另一腿伸直，脚尖朝前","equip":"自重","desc":"练大腿内侧与侧向稳定。向一侧跨出下蹲，屈膝侧坐髋，另一腿伸直、脚尖朝前。"},{"id":"sl_rdl","name":"扶墙单腿硬拉","light":"2×6/侧","std":"3×8/侧","plus":"3×10/侧","cue":"后腿向后抬起与身体成一线","equip":"自重","desc":"练后链与平衡。一手扶墙，一腿向后抬起与身体成一线，髋往前推再收回。"}]},{"slot":"早上","title":"核心 C 组","items":[{"id":"knee_raise","name":"仰卧屈膝抬腿","light":"2×8","std":"3×10","plus":"3×12","cue":"腰不离地，练下腹","equip":"自重","desc":"练下腹。仰卧，腰不离地，屈膝把腿抬起再放下。"},{"id":"pallof","name":"站姿抗旋转推（弹力带）","light":"2×8/侧","std":"3×10/侧","plus":"3×12/侧","cue":"身体正对前方不转，练抗扭转","equip":"弹力带","desc":"练抗扭转核心。弹力带固定身侧，双手推出，身体不转。"}]}]},"2027-01-02":{"date":"2027-01-02","dow":"周六","dayIndex":27,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"有氧","title":"周末慢跑","items":[{"id":"run3k","name":"慢跑 3 公里","light":"慢跑 2 公里+走 1 公里","std":"慢跑 3 公里","plus":"慢跑 3 公里+最后一公里提速","cue":"能说话的速度，配速不重要，跑姿别塌","equip":"跑鞋","desc":"慢跑 3 公里。能说话的速度，配速不重要，跑姿别塌。"},{"id":"run_core","name":"跑后核心 5 分钟","light":"侧平板+猫牛","std":"核心 C 套餐简化版","plus":"核心 C 全套","cue":"跑完别马上坐下，趁热做","equip":"自重","desc":"跑后核心。跑完别马上坐，趁热做核心 C 简化版。"}]}]},"2027-01-03":{"date":"2027-01-03","dow":"周日","dayIndex":28,"week":4,"phase":"第 4 周 · 减量恢复","deload":true,"hint":"负荷下调 30%，让身体吸收前三周成果","slots":[{"slot":"恢复","title":"主动恢复日","items":[{"id":"zhanzhuang","name":"站桩 / 八段锦","light":"15 分钟","std":"20 分钟","plus":"20 分钟","cue":"全天唯一“必修项”，主动恢复就靠它","equip":"无","desc":"站桩/八段锦：全天唯一必修，主动恢复，放松精神调气息。"},{"id":"outdoor","name":"户外散步或赏绿 20 分钟","light":"20 分钟","std":"30 分钟","plus":"40 分钟","cue":"纯放松不计数步，喘匀气","equip":"无","desc":"户外散步赏绿：纯放松不计数步，喘匀气，看看绿植。"}]}]}}}</script>
+<script>
+var DATA = JSON.parse(document.getElementById('plan-data').textContent);
+// 注册 Service Worker：装到桌面后离线也能秒开（仅 https 环境生效，http 本地地址自动跳过）
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){ try{ navigator.serviceWorker.register('sw.js'); }catch(e){} });
+}
+var PLAN = DATA.plan, PROFILE = DATA.profile;
+var KEY = 'ai2ai-training-v1';
+var API_KEY = 'aiai-cf-9Kq2mP7vR4tL8xZ1wQ3eN5'; // 与本机 server.js / worker.js 的 SECRET 一致
+var localMode = (location.protocol === 'http:'); // 本机自托管：http 同源，自动连接，无需填地址
+var apiBase = (function(){ try{ return localStorage.getItem('aiai_api_base')||''; }catch(e){ return ''; } })();
+var store = load();
+function normalize(s){
+  s = s || {};
+  s.checks = s.checks || {}; s.health = s.health || {};
+  s.override = s.override || {}; s.base = s.base || {};
+  return s;
+}
+function load(){
+  var s={};
+  try{ s = JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ s={}; }
+  return normalize(s);
+}
+/* ---------- 记录量统计（用于判断哪份存档更完整） ---------- */
+function sizeOf(s){
+  s = s || {}; var n = 0;
+  for(var d in (s.checks||{})){ for(var k in (s.checks[d]||{})){ if(s.checks[d][k]) n++; } }
+  n += Object.keys(s.health||{}).length;
+  n += Object.keys(s.override||{}).length;
+  return n;
+}
+
+/* ---------- 备用通道：IndexedDB ---------- */
+var IDB_NAME='ai2ai-training', IDB_STORE='kv';
+function idbOpen(){
+  return new Promise(function(res, rej){
+    if(typeof indexedDB === 'undefined') { rej(new Error('no idb')); return; }
+    var r;
+    try{ r = indexedDB.open(IDB_NAME, 1); }catch(e){ rej(e); return; }
+    r.onupgradeneeded = function(){ var db=r.result; if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE); };
+    r.onsuccess = function(){ res(r.result); };
+    r.onerror = function(){ rej(r.error||new Error('idb err')); };
+  });
+}
+function idbPut(obj){
+  idbOpen().then(function(db){
+    try{ var tx=db.transaction(IDB_STORE,'readwrite'); tx.objectStore(IDB_STORE).put(obj, KEY); }catch(e){}
+  })['catch'](function(){});
+}
+function idbGet(){
+  return idbOpen().then(function(db){
+    return new Promise(function(res){
+      try{
+        var tx=db.transaction(IDB_STORE,'readonly'), q=tx.objectStore(IDB_STORE).get(KEY);
+        q.onsuccess=function(){ res(q.result||null); }; q.onerror=function(){ res(null); };
+      }catch(e){ res(null); }
+    });
+  })['catch'](function(){ return null; });
+}
+
+/* ---------- 哨兵 cookie：只记时间戳，用来判断「存储被谁清了」 ---------- */
+function setSentinel(){ try{ document.cookie = 'aiaits=' + Date.now() + ';path=/;max-age=31536000;samesite=lax'; }catch(e){} }
+function getSentinel(){ try{
+  var m = document.cookie.match(/(?:^|;\s*)aiaits=(\d+)/); return m ? +m[1] : 0;
+}catch(e){ return 0; } }
+
+function b64enc(str){
+  var bytes = new TextEncoder().encode(str), out='';
+  for(var i=0;i<bytes.length;i++) out += String.fromCharCode(bytes[i]);
+  return btoa(out);
+}
+function b64dec(str){
+  var bin = atob(str), bytes = new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function flash(msg){
+  var t=document.getElementById('toast'); if(!t) return;
+  t.textContent=msg; t.classList.add('on');
+  clearTimeout(flash._t); flash._t=setTimeout(function(){ t.classList.remove('on'); },1100);
+}
+function banner(msg){
+  var b=document.getElementById('banner'); if(!b) return;
+  if(!msg){ b.classList.remove('on'); return; }
+  b.innerHTML=msg; b.classList.add('on');
+}
+function setStoreFlag(ok){
+  var f=document.getElementById('storeFlag'); if(!f) return;
+  f.classList.toggle('bad', !ok);
+  document.getElementById('storeTxt').textContent = ok ? '本机存储正常，打卡已存住' : '本机存储不可用，打卡存不住';
+}
+function save(){
+  var str='', ok=false;
+  try{
+    store._ts = Date.now();
+    str = JSON.stringify(store);
+    localStorage.setItem(KEY, str);
+    // 回读校验：写进去不等于存得住，必须读回来比对
+    var back = localStorage.getItem(KEY);
+    ok = !!back && back === str;
+  }catch(e){ ok=false; }
+  if(ok){
+    setSentinel();
+    idbPut(JSON.parse(str));          // 同步写备用通道
+    banner(''); setStoreFlag(true); updSaveInfo(); flash('已保存');
+    // 推送到云端（iOS 清本地也清不到这里）
+    cloudSave(JSON.parse(str)).then(function(cok){ updCloudInfo(cok); });
+  }else{
+    setStoreFlag(false);
+    banner('<b>这一下没存住。</b><br>常见原因：在微信内置浏览器里打开，或处于无痕/隐私模式。<br><b>做法：</b>点右上角「···」→「在浏览器打开」，用手机自带浏览器（iPhone 用 Safari，安卓用 Chrome）打开 →「添加到主屏幕」→ 以后只从桌面图标进入。<br>重要记录请先点底部「存成文件」，那个不依赖浏览器存储。');
+  }
+  return ok;
+}
+/* ---------- 云端同步：GitHub Gist（免费、免实名、中国可访问） ---------- */
+var GH_KEY='aiai_gh_v1', GH_FILE='training.json';
+function ghCfg(){ try{ return JSON.parse(localStorage.getItem(GH_KEY))||{}; }catch(e){ return {}; } }
+function ghReady(){ var c=ghCfg(); return !!(c.token); }
+function ghHd(){ return {'Authorization':'token '+ghCfg().token,'Content-Type':'application/json','Accept':'application/vnd.github+json'}; }
+function ghEnsureGist(obj){
+  var c=ghCfg();
+  if(c.gistId) return Promise.resolve(c.gistId);
+  var body=JSON.stringify({public:false,description:'ai2ai training check-in',files:{[GH_FILE]:{content:JSON.stringify(obj)}}});
+  return fetch('https://api.github.com/gists',{method:'POST',headers:ghHd(),body:body})
+    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+    .then(function(j){ if(j.id){ c.gistId=j.id; try{ localStorage.setItem(GH_KEY,JSON.stringify(c)); }catch(e){} return j.id; } throw new Error('no id'); })
+    ['catch'](function(e){ return null; });
+}
+function ghLoad(){
+  var c=ghCfg(); if(!c.gistId) return Promise.resolve(null);
+  return fetch('https://api.github.com/gists/'+c.gistId,{method:'GET',headers:ghHd(),cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+    .then(function(j){ try{ var t=j.files&&j.files[GH_FILE]&&j.files[GH_FILE].content; return t?normalize(JSON.parse(t)):null; }catch(e){ return null; } })
+    ['catch'](function(){ return null; });
+}
+function ghSave(obj){
+  return ghEnsureGist(obj).then(function(id){
+    if(!id) return false;
+    var body=JSON.stringify({files:{[GH_FILE]:{content:JSON.stringify(obj)}}});
+    return fetch('https://api.github.com/gists/'+id,{method:'PATCH',headers:ghHd(),body:body})
+      .then(function(r){ return r.ok; })['catch'](function(){ return false; });
+  });
+}
+function cloudAvailable(){ return ((localMode || ghReady()) && typeof fetch !== 'undefined'); }
+function cloudLoad(){
+  if(!cloudAvailable()) return Promise.resolve(null);
+  if(ghReady()) return ghLoad();
+  // 本机自托管兜底（http 同源，相对地址打到 server.js）
+  return fetch('/api/load?k=' + encodeURIComponent(API_KEY), {method:'GET',cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error('http '+r.status); return r.text(); })
+    .then(function(t){ return normalize(JSON.parse(t)); })['catch'](function(){ return null; });
+}
+function cloudSave(obj){
+  if(!cloudAvailable()) return Promise.resolve(false);
+  if(ghReady()) return ghSave(obj);
+  return fetch('/api/save?k=' + encodeURIComponent(API_KEY), {method:'PUT',cache:'no-store',
+    headers:{'Content-Type':'application/json'}, body: JSON.stringify(obj)})
+    .then(function(r){ return r.ok; })['catch'](function(){ return false; });
+}
+function updCloudInfo(ok){
+  var el=document.getElementById('cloudInfo'); if(!el) return;
+  if(ghReady()){ el.className='ci '+(ok===false?'warn':'ok');
+    el.textContent = (ok===false)?'云端连通但本次没存上（会重试）':'已连云端 GitHub ✓ 记录存你本人私密存档，iOS 清不掉'; return; }
+  if(localMode){ el.className='ci ok'; el.textContent='已连接本机服务 ✓（记录存你电脑）'; return; }
+  el.className='ci warn'; el.textContent='未连接云端：数据只在本机（会被 iOS 清）';
+}
+function updSaveInfo(){
+  var el = document.getElementById('saveInfo'); if(!el) return;
+  var ts = store._ts || 0;
+  var d = ts ? new Date(ts) : null;
+  var t = d ? pad(d.getHours())+':'+pad(d.getMinutes()) : '—';
+  var n = 0; for(var k in (store.checks||{})){ for(var j in (store.checks[k]||{})){ if(store.checks[k][j]) n++; } }
+  el.textContent = '最近保存：'+t+' · 已记录 '+n+' 项打卡';
+}
+function envText(){
+  var ua = (navigator.userAgent||'');
+  var wx = /MicroMessenger/i.test(ua);
+  var qq = /\bQQ\b|QQBrowser/i.test(ua);
+  var sa = (window.navigator.standalone===true) ||
+           (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  if(wx) return {bad:true, text:'当前入口：<b>微信内置浏览器</b>（存不住，请点右上角「···」在浏览器中打开）'};
+  if(qq) return {bad:true, text:'当前入口：<b>QQ 浏览器</b>（可能存不住，建议改用系统浏览器）'};
+  if(sa) return {bad:false, text:'当前入口：<b>主屏幕图标</b>（独立存档，正常）'};
+  return {bad:false, text:'当前入口：<b>手机浏览器</b>（正常；加到主屏幕后记得只从图标进）'};
+}
+function showEnv(){
+  var el = document.getElementById('envInfo'); if(!el) return;
+  var e = envText();
+  el.innerHTML = e.text;
+  el.style.color = e.bad ? '#791F1F' : 'var(--ink3)';
+}
+function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function pad(n){ return n<10?'0'+n:''+n; }
+function shift(ds,n){ var p=ds.split('-'); var d=new Date(+p[0],+p[1]-1,+p[2]); d.setDate(d.getDate()+n);
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+
+var cur = todayStr();
+if(!PLAN[cur]) cur = Object.keys(PLAN)[0];
+
+/* ---------- 自适应引擎 ---------- */
+function dayStat(ds){
+  var d = PLAN[ds]; if(!d) return null;
+  var ids=[]; d.slots.forEach(function(s,i){ s.items.forEach(function(it){ ids.push(i+'_'+it.id); }); });
+  var ch = store.checks[ds] || {};
+  var done = ids.filter(function(k){ return ch[k]; }).length;
+  return {total:ids.length, done:done, rate: ids.length? done/ids.length : 0};
+}
+function pickTier(ds){
+  var y = dayStat(shift(ds,-1));
+  var h = store.health[ds] || {};
+  var baseRhr = (store.base && store.base.rhr) ? +store.base.rhr : 0;
+  var rhrHigh = baseRhr ? (h.rhr && +h.rhr >= baseRhr + 5) : false;
+  var forced = store.override[ds] || null;
+  var reasons=[], tier='std';
+
+  var hardLight = false;
+  if(h.fatigue==='2' || h.sleep==='5' || (+h.tongue>=2) || rhrHigh){
+    tier='light'; hardLight=true;
+    if(h.fatigue==='2') reasons.push('晨起明显乏力');
+    else if(h.sleep==='5') reasons.push('睡眠不足 6 小时');
+    else if(+h.tongue>=2) reasons.push('齿痕舌 '+h.tongue+' 级');
+    else if(rhrHigh) reasons.push('静息心率比基线高 5 以上');
+  }
+  if(!hardLight){
+    if(!y){
+      tier='std'; reasons.push('新周期开始，从标准量起步');
+    } else if(y.rate<0.5){
+      tier='light'; reasons.push('昨天只完成 '+y.done+'/'+y.total+' 项');
+    } else if(y.rate<1){
+      tier='std'; reasons.push('昨天完成 '+y.done+'/'+y.total+' 项，保持原计划');
+    } else {
+      if(h.sleep==='7'||h.sleep==='8'){ tier='plus'; reasons.push('昨天全部完成，睡眠也够'); }
+      else if(h.sleep==='6'){ tier='std'; reasons.push('昨天全完成，但睡眠一般，不加量'); }
+      else { tier='std'; reasons.push('昨天全完成，填完晨起信号后再决定是否加量'); }
+    }
+  }
+  // 连续三天不足一半 -> 强制休息
+  var streak=0;
+  for(var i=1;i<=3;i++){ var s=dayStat(shift(ds,-i)); if(s && s.total>0 && s.rate<0.5) streak++; else break; }
+  if(streak>=3){ tier='light'; reasons=['连续 '+streak+' 天完成不足一半','今天按轻量档走，别硬撑']; }
+
+  if(forced){ tier=forced; reasons=['你手动选择了'+(forced==='light'?'轻量':forced==='plus'?'进阶':'标准')+'档']; }
+  return {tier:tier, reason:reasons.join(' · ')};
+}
+
+/* ---------- 渲染 ---------- */
+var locDay = {0:'周一',1:'周二',2:'周三',3:'周四',4:'周五',5:'周六',6:'周日'};
+function render(){
+  var d = PLAN[cur];
+  if(!d){ document.getElementById('slots').innerHTML='<p>本周期已结束。</p>'; return; }
+  var ch = store.checks[cur] || {};
+  var pc = pickTier(cur);
+  var tierWord = pc.tier==='light'?'轻量档':pc.tier==='plus'?'进阶档':'标准档';
+
+  document.getElementById('hdDate').textContent = (+cur.slice(5,7))+'月'+(+cur.slice(8,10))+'日 '+locDay[new Date(cur).getDay()===0?6:new Date(cur).getDay()-1];
+  document.getElementById('hdSub').textContent = '第 '+(d.dayIndex)+' 天 · '+d.phase;
+  document.getElementById('next').disabled = (cur>=todayStr());
+
+  // 清单
+  var html='', total=0, done=0;
+  d.slots.forEach(function(slot,si){
+    var cls = slot.slot==='早上'?'am':slot.slot==='晚上'?'pm':slot.slot==='有氧'?'ao':'rc';
+    var sd=0; slot.items.forEach(function(it){ var k=si+'_'+it.id; if(ch[k]) sd++; });
+    html += '<div class="slot-h"><span class="tag '+cls+'">'+slot.slot+'</span><span class="nm">'+slot.title+
+            '</span><span class="cnt">'+sd+'/'+slot.items.length+'</span></div>';
+    slot.items.forEach(function(it){
+      var k=si+'_'+it.id; var doneIt=!!ch[k]; total++; if(doneIt) done++;
+      var dose = it[pc.tier] || it.std;
+      html += '<div class="item'+(doneIt?' done':'')+'" data-k="'+k+'">'+
+        '<div class="box"><svg viewBox="0 0 24 24"><polyline points="4,12 9,17 20,6"></polyline></svg></div>'+
+        '<div class="body"><div class="nm">'+it.name+(it.equip?'<span class="eq">'+it.equip+'</span>':'')+'</div>'+
+        '<div class="dose">'+dose+'</div>'+
+        (it.cue?'<div class="cue">'+it.cue+'</div>':'')+
+        (it.desc?'<div class="desc">'+it.desc+'</div>':'')+
+        '<div class="pho"><img loading="lazy" src="assets/'+it.id+'.jpg" alt="'+it.name+'" onerror="this.style.display=\'none\';this.parentNode.classList.add(\'noimg\');"><span class="pho-tag">图示待补</span></div>'+
+        '</div></div>';
+    });
+  });
+  document.getElementById('slots').innerHTML = html;
+
+  // 进度环
+  var rate = total? done/total : 0;
+  document.getElementById('ringNum').textContent = Math.round(rate*100)+'%';
+  document.getElementById('ringFill').setAttribute('stroke-dashoffset', 195 - 195*rate);
+  document.getElementById('proBig').textContent = done===total && total>0 ? '今天全部完成 🎉' : ('还剩 '+(total-done)+' 项');
+  document.getElementById('proSmall').innerHTML = '<span class="tier-chip '+pc.tier+'">'+tierWord+'</span> · 共 '+total+' 项 · '+d.hint;
+
+  // 建议
+  var adv = '<div class="t">今日处方</div><div class="c"><b>'+tierWord+'</b> · '+pc.reason+'</div>';
+  var extra = [];
+  if(pc.tier==='light') extra.push('今晚别追进度，做完多少算多少。<b>微汗即止</b>，出大汗伤阳气也伤关节。');
+  var h = store.health[cur]||{};
+  if(!h.sleep && !h.tongue && cur===todayStr()) extra.push('晨起信号还没填，填了之后明天的加/减档才准。');
+  if(d.deload) extra.push('本周是<b>减量周</b>，负荷下调 30% 是计划的一部分，不是你退步了。');
+  if((new Date()).getDay()===0) extra.push('今天是周日，<b>点上方「存成文件」备份一次</b>，防止 iOS 把本机记录清掉。');
+  adv += '<div class="r">'+(extra.join('<br>')||'按上面的量做完即可，全程 RPE ≤ 7。')+'</div>';
+  document.getElementById('advice').innerHTML = adv;
+
+  // 健康面板回显
+  fillHealth();
+  renderHist();
+  document.getElementById('ftRange').textContent = Object.keys(PLAN)[0]+' 至 '+Object.keys(PLAN)[Object.keys(PLAN).length-1];
+  bind();
+}
+
+function bind(){
+  Array.prototype.forEach.call(document.querySelectorAll('.item'), function(el){
+    el.onclick = function(){
+      var k = el.getAttribute('data-k');
+      store.checks[cur] = store.checks[cur] || {};
+      if(store.checks[cur][k]) delete store.checks[cur][k]; else store.checks[cur][k]=true;
+      save(); render();
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.opt'), function(el){
+    if(el.dataset.bound) return; el.dataset.bound='1';
+    el.onclick = function(){
+      var box = el.parentNode, k = box.getAttribute('data-k');
+      Array.prototype.forEach.call(box.children, function(c){ c.classList.remove('sel'); });
+      el.classList.add('sel');
+      store.health[cur] = store.health[cur] || {};
+      store.health[cur][k] = el.getAttribute('data-v');
+      save(); render();
+    };
+  });
+}
+
+function fillHealth(){
+  var h = store.health[cur] || {};
+  Array.prototype.forEach.call(document.querySelectorAll('.opts'), function(box){
+    var k = box.getAttribute('data-k');
+    Array.prototype.forEach.call(box.children, function(c){
+      c.classList.toggle('sel', h[k]!==undefined && h[k]===c.getAttribute('data-v'));
+    });
+  });
+  document.getElementById('rhr').value = h.rhr||'';
+  document.getElementById('wt').value = h.weight||'';
+}
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('healthHd').onclick = function(){ document.getElementById('healthBox').classList.toggle('open'); };
+  document.getElementById('prev').onclick = function(){ if(PLAN[shift(cur,-1)]){ cur=shift(cur,-1); render(); } };
+  document.getElementById('next').onclick = function(){ if(cur<todayStr() && PLAN[shift(cur,1)]){ cur=shift(cur,1); render(); } };
+  document.getElementById('btnLight').onclick = function(){ store.override[cur]='light'; save(); render(); };
+  document.getElementById('btnStd').onclick = function(){ delete store.override[cur]; save(); render(); };
+  document.getElementById('rhr').addEventListener('input', function(){
+    store.health[cur]=store.health[cur]||{}; store.health[cur].rhr=this.value;
+    if(!store.base) store.base={};
+    if(!store.base.rhr) store.base.rhr=this.value;
+    save(); render();
+  });
+  document.getElementById('wt').addEventListener('input', function(){
+    store.health[cur]=store.health[cur]||{}; store.health[cur].weight=this.value; save();
+  });
+
+  // 启动自检：本机存储到底能不能写
+  try{ localStorage.setItem('__probe','1'); localStorage.removeItem('__probe'); setStoreFlag(true); }
+  catch(e){
+    setStoreFlag(false);
+    banner('<b>本机存储不可用，今天勾的内容关掉就会丢。</b><br>请在手机自带浏览器（iPhone 用 Safari，安卓用 Chrome）里打开，不要用无痕/隐私窗口，也不要在微信内置浏览器里打卡。<br>这种状态下请用底部「存成文件」保存记录。');
+  }
+
+  showEnv(); updSaveInfo();
+
+  // 云端连接设置（GitHub Gist）
+  var cloudCard = document.getElementById('cloudCard');
+  if(ghReady()){
+    cloudCard.style.display='none';
+    updCloudInfo(null);
+    var sw = document.getElementById('storeWhere');
+    if(sw) sw.textContent='打卡记录自动存到你的云端 GitHub（不怕 iOS 清）';
+  } else if(localMode){
+    var sw2 = document.getElementById('storeWhere');
+    if(sw2) sw2.textContent='本机服务可用；建议连云端，任何网络都能用';
+  }
+  document.getElementById('apiSave').onclick = function(){
+    var tok=(document.getElementById('ghToken').value||'').trim();
+    if(!tok){ flash('请先粘贴 GitHub 令牌（ghp_ 开头）'); return; }
+    try{ localStorage.setItem(GH_KEY, JSON.stringify({token:tok})); }catch(e){}
+    flash('正在连接云端…');
+    ghSave(store).then(function(ok){
+      if(!ok){ flash('连不上：检查令牌是否正确、是否勾选了 gist 权限'); updCloudInfo(false); return; }
+      cloudCard.style.display='none';
+      var sw3=document.getElementById('storeWhere'); if(sw3) sw3.textContent='打卡记录自动存到你的云端 GitHub（不怕 iOS 清）';
+      ghLoad().then(function(d){ adoptCloud(d); });
+    });
+  };
+
+  // 启动恢复链：localStorage -> IndexedDB -> 云端（云端为准）
+  function adoptCloud(d){
+    if(d && sizeOf(d) > sizeOf(store)){
+      store = normalize(d);
+      save(); render();                 // save 会回写本地并把最新数据推上云端
+      flash('已从云端恢复 '+sizeOf(store)+' 条记录');
+      updCloudInfo(true);
+    } else if(ghReady() || localMode){
+      // 本地比云端多（比如刚离线勾了几项），把本地推上去
+      cloudSave(store).then(function(ok){ updCloudInfo(ok); });
+    } else {
+      updCloudInfo(null);
+    }
+  }
+  function finishBoot(){
+    if(sizeOf(store)===0 && getSentinel()){
+      var d = new Date(getSentinel());
+      banner('<b>发现异常：之前存过记录，但现在读出来是空的。</b><br>上次保存时间 '+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+'。<br>这说明<b>浏览器把本机存储清掉了</b>（微信内置浏览器、iOS 自动清理、无痕窗口都会这样），不是程序没写。<br><b>根治办法：</b>第①步连接云端后，记录存到你自己的 GitHub 私密存档，iOS 清本地也丢不了；同时每周日点一次底部「存成文件」双保险。');
+    }
+  }
+  if(ghReady()){ cloudCard.style.display='none'; }
+  idbGet().then(function(d){
+    if(d && sizeOf(d) > sizeOf(store)){ store = normalize(d); save(); render();
+      flash('已从备用存档恢复 '+sizeOf(store)+' 条记录'); }
+    cloudLoad().then(function(cd){
+      adoptCloud(cd);
+      finishBoot();
+    });
+  });
+
+  // 关页面 / 切后台时再补一次写，防止来不及落盘
+  var hardSave = function(){ try{ store._ts=Date.now(); localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
+  window.addEventListener('pagehide', hardSave);
+  document.addEventListener('visibilitychange', function(){ if(document.hidden) hardSave(); });
+
+  // 存成文件 / 从文件恢复
+  document.getElementById('btnFile').onclick = function(){
+    var name = '打卡记录-' + todayStr() + '.txt';
+    var txt = 'AIAI1.' + b64enc(JSON.stringify(store));
+    var ok = false;
+    try{
+      var blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href=url; a.download=name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+      ok = true;
+    }catch(e){ ok=false; }
+    if(ok) flash('已存成文件：'+name);
+    else {
+      // 下载被拦时退回备份码
+      document.getElementById('backup').value = txt;
+      document.getElementById('backup').select();
+      flash('浏览器拦了下载，已生成备份码，长按复制保存');
+    }
+  };
+  document.getElementById('btnFileIn').onclick = function(){ document.getElementById('fileIn').click(); };
+  document.getElementById('fileIn').onchange = function(){
+    var f = this.files && this.files[0]; if(!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){
+      applyBackup(String(rd.result||''));
+      document.getElementById('fileIn').value='';
+    };
+    rd.readAsText(f, 'utf-8');
+  };
+
+  document.getElementById('btnExport').onclick = function(){
+    var code = 'AIAI1.' + b64enc(JSON.stringify(store));
+    var ta = document.getElementById('backup');
+    ta.style.display='block'; ta.value = code;
+    try{ ta.select(); ta.setSelectionRange(0, 999999); }catch(e){}
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(code).then(function(){ flash('备份码已复制'); },
+        function(){ flash('请长按复制上面的文字'); });
+    } else { flash('请长按复制上面的文字'); }
+  };
+  function applyBackup(raw){
+    var v = String(raw||'').trim().replace(/^AIAI1\./,'');
+    if(!v){ flash('内容为空，换个文件试试'); return; }
+    try{
+      var obj = JSON.parse(b64dec(v));
+      if(!obj || (!obj.checks && !obj.health)) throw new Error('bad');
+      var n = sizeOf(obj);
+      store = normalize(obj);
+      save(); render();
+      flash('已恢复 '+n+' 条记录');
+    }catch(e){ flash('这个文件不是打卡备份，重新选一个'); }
+  }
+
+  document.getElementById('btnImport').onclick = function(){
+    var ta = document.getElementById('backup');
+    ta.style.display='block';
+    applyBackup(ta.value);
+  };
+
+  // 常驻数据安全栏：复用上面两个 handler
+  var _bf = document.getElementById('btnFile');
+  var _be = document.getElementById('btnExport');
+  if(_bf) document.getElementById('btnSafeFile').onclick = _bf.onclick;
+  if(_be) document.getElementById('btnSafeCode').onclick = _be.onclick;
+
+  render();
+});
+
+function renderHist(){
+  var html='', d=new Date();
+  for(var i=6;i>=0;i--){
+    var ds = shift(todayStr(), -i);
+    var s = dayStat(ds);
+    var pct = s? Math.round(s.rate*100) : 0;
+    var dow_i = (new Date(ds).getDay()+6)%7;
+    html += '<div class="b'+(ds===cur?' today':'')+'"><div style="font-size:10.5px;color:var(--ink3)">'+(s?pct+'%':'')+'</div>'+
+      '<div class="fill" style="height:'+Math.max(3, pct*0.5)+'px;background:'+(s&&!s.total?'#EDE7DE':(pct>=100?'#3D7A54':'#C0522F'))+'"></div>'+
+      '<div class="lb">'+locDay[dow_i]+'</div></div>';
+  }
+  document.getElementById('bars').innerHTML = html;
+}
+</script>
+</body>
+</html>
